@@ -830,7 +830,7 @@ def extract_critical_entities(text):
     - Negations (English keywords & Malayalam verbal suffixes)
     - Names (Dataset proper nouns & candidate entities)
     """
-    if not text or not text.strip():
+    if not text or not isinstance(text, str) or not text.strip():
         return []
 
     entities = []
@@ -991,10 +991,18 @@ def compare_critical_entities(reference_text, hypothesis_text):
             'missing_items': int entities present in reference but absent in transcript
             'extra_items': int spurious entities inserted in transcript
             'accuracy': float percentage of reference critical items preserved
+            'match_rate': float percentage of reference critical items preserved (synonym for accuracy)
             'details': list of dicts with Category, Reference Value, Recognized Value, Status, Explanation
     """
-    ref_entities = extract_critical_entities(reference_text)
-    hyp_entities = extract_critical_entities(hypothesis_text)
+    if not reference_text or not isinstance(reference_text, str):
+        ref_entities = []
+    else:
+        ref_entities = extract_critical_entities(reference_text)
+
+    if not hypothesis_text or not isinstance(hypothesis_text, str):
+        hyp_entities = []
+    else:
+        hyp_entities = extract_critical_entities(hypothesis_text)
 
     matched_ref_indices = set()
     matched_hyp_indices = set()
@@ -1072,6 +1080,7 @@ def compare_critical_entities(reference_text, hypothesis_text):
         "missing_items": missing,
         "extra_items": extra,
         "accuracy": accuracy,
+        "match_rate": accuracy,
         "details": comparison_rows
     }
 
@@ -1249,11 +1258,15 @@ def analyze_audio_quality(audio_data, filename=None):
 # Clean vs. Noisy Comparison Engine
 # -----------------------------------------------------------------------------
 def compare_clean_noisy(
-    reference_text,
-    clean_transcript,
-    noisy_transcript,
+    reference_text=None,
+    clean_transcript="",
+    noisy_transcript="",
     clean_quality=None,
-    noisy_quality=None
+    noisy_quality=None,
+    clean_audio_name="clean_recording",
+    noisy_audio_name="noisy_recording",
+    reference=None,
+    **kwargs
 ):
     """
     Compare speech recognition reliability between clean and noisy recordings
@@ -1267,12 +1280,13 @@ def compare_clean_noisy(
     - Word error differences (Substitutions, Deletions, Insertions)
     - Objective determination of which recording performed better based on actual results.
     """
-    clean_wer_eval = evaluate(reference_text, clean_transcript)
-    noisy_wer_eval = evaluate(reference_text, noisy_transcript)
-    clean_cer_eval = evaluate_cer(reference_text, clean_transcript)
-    noisy_cer_eval = evaluate_cer(reference_text, noisy_transcript)
-    clean_crit = compare_critical_entities(reference_text, clean_transcript)
-    noisy_crit = compare_critical_entities(reference_text, noisy_transcript)
+    ref_text = reference_text or reference or ""
+    clean_wer_eval = evaluate(ref_text, clean_transcript)
+    noisy_wer_eval = evaluate(ref_text, noisy_transcript)
+    clean_cer_eval = evaluate_cer(ref_text, clean_transcript)
+    noisy_cer_eval = evaluate_cer(ref_text, noisy_transcript)
+    clean_crit = compare_critical_entities(ref_text, clean_transcript)
+    noisy_crit = compare_critical_entities(ref_text, noisy_transcript)
 
     clean_wer = clean_wer_eval["wer"] if clean_wer_eval else 0.0
     noisy_wer = noisy_wer_eval["wer"] if noisy_wer_eval else 0.0
@@ -1389,16 +1403,45 @@ def compare_clean_noisy(
         "noisy_crit": noisy_crit,
         "better_recording": better_recording,
         "interpretation": impact_summary,
-        "table_rows": table_rows
+        "table_rows": table_rows,
+        "clean_transcript": clean_transcript,
+        "noisy_transcript": noisy_transcript,
+        "reference": ref_text,
+        "clean_audio_name": clean_audio_name,
+        "noisy_audio_name": noisy_audio_name,
+        "clean_quality": clean_quality,
+        "noisy_quality": noisy_quality,
+        "clean": {
+            "wer": clean_wer,
+            "cer": clean_cer,
+            "errors": clean_errors,
+            "transcript": clean_transcript,
+            "ref_words": clean_wer_eval["reference_words"] if clean_wer_eval else 0,
+            "quality": clean_quality
+        },
+        "noisy": {
+            "wer": noisy_wer,
+            "cer": noisy_cer,
+            "errors": noisy_errors,
+            "transcript": noisy_transcript,
+            "ref_words": noisy_wer_eval["reference_words"] if noisy_wer_eval else 0,
+            "quality": noisy_quality
+        },
+        "degradation": {
+            "delta_wer": delta_wer,
+            "delta_cer": delta_cer,
+            "delta_errors": delta_errors,
+            "outcome": better_recording.capitalize()
+        }
     }
 
 
 def generate_comparison_txt_report(
     comp_results,
-    reference,
-    clean_audio_name,
-    noisy_audio_name,
-    language,
+    reference=None,
+    clean_audio_name=None,
+    noisy_audio_name=None,
+    language=None,
     clean_req_id="N/A",
     noisy_req_id="N/A"
 ):
@@ -1408,27 +1451,37 @@ def generate_comparison_txt_report(
         f"{'Metric':<32} | {'Clean Recording':<18} | {'Noisy Recording':<18} | {'Delta (Noisy - Clean)'}",
         "-" * 95
     ]
-    for row in comp_results["table_rows"]:
+    for row in comp_results.get("table_rows", []):
         table_lines.append(
-            f"{row['Metric']:<32} | {row['Clean Recording']:<18} | {row['Noisy Recording']:<18} | {row['Delta (Noisy - Clean)']}"
+            f"{row.get('Metric', ''):<32} | {row.get('Clean Recording', ''):<18} | {row.get('Noisy Recording', ''):<18} | {row.get('Delta (Noisy - Clean)', '')}"
         )
     table_text = "\n".join(table_lines)
+
+    ref_str = reference or comp_results.get("reference", "N/A")
+    c_name = clean_audio_name or comp_results.get("clean_audio_name", "Clean Recording")
+    n_name = noisy_audio_name or comp_results.get("noisy_audio_name", "Noisy Recording")
+    lang_str = language or comp_results.get("language", "Malayalam")
+    c_req = clean_req_id if clean_req_id != "N/A" else comp_results.get("clean_request_id", "N/A")
+    n_req = noisy_req_id if noisy_req_id != "N/A" else comp_results.get("noisy_request_id", "N/A")
+    clean_tr = comp_results.get("clean", {}).get("transcript") if isinstance(comp_results.get("clean"), dict) else comp_results.get("clean_transcript", "N/A")
+    noisy_tr = comp_results.get("noisy", {}).get("transcript") if isinstance(comp_results.get("noisy"), dict) else comp_results.get("noisy_transcript", "N/A")
+    outcome_str = comp_results.get("better_recording", "N/A").upper()
 
     report = f"""================================================================================
 NADHAM QA - CLEAN VS. NOISY SPEECH RECOGNITION COMPARISON REPORT
 ================================================================================
 Timestamp:          {timestamp_str}
-Clean Audio:        {clean_audio_name}
-Noisy Audio:        {noisy_audio_name}
-Language:           {language}
+Clean Audio:        {c_name}
+Noisy Audio:        {n_name}
+Language:           {lang_str}
 Model:              Gnani Prisma v2.5
-Clean Request ID:   {clean_req_id}
-Noisy Request ID:   {noisy_req_id}
+Clean Request ID:   {c_req}
+Noisy Request ID:   {n_req}
 
 BENCHMARK OUTCOME & RELIABILITY INTERPRETATION:
 --------------------------------------------------------------------------------
-Better Recording:   {comp_results['better_recording'].upper()}
-Interpretation:     {comp_results['interpretation']}
+Better Recording:   {outcome_str}
+Interpretation:     {comp_results.get('interpretation', 'N/A')}
 
 ACCURACY & ACOUSTIC COMPARISON TABLE:
 --------------------------------------------------------------------------------
@@ -1437,13 +1490,13 @@ ACCURACY & ACOUSTIC COMPARISON TABLE:
 TRANSCRIPTS:
 --------------------------------------------------------------------------------
 Shared Ground Truth Reference:
-{reference}
+{ref_str}
 
 Clean Recording Transcript:
-{comp_results.get('clean_transcript', 'N/A')}
+{clean_tr}
 
 Noisy Recording Transcript:
-{comp_results.get('noisy_transcript', 'N/A')}
+{noisy_tr}
 
 ================================================================================
 Generated by NADHAM QA Platform | Kerala-first. India-ready.
@@ -2737,7 +2790,12 @@ elif st.session_state["nav_selection"] == "🎙️ Single Evaluation":
         hyp_text = st.session_state["transcript"]
         metrics = evaluate(ref_text, hyp_text)
         cer_metrics = evaluate_cer(ref_text, hyp_text)
-        crit_results = compare_critical_entities(ref_text, hyp_text)
+        crit_results = None
+        try:
+            crit_results = compare_critical_entities(ref_text, hyp_text)
+        except Exception as e:
+            logger.error(f"Critical entity evaluation error: {e}")
+            crit_results = None
 
         st.markdown("---")
         st.markdown("### 📊 Evaluation Diagnostics & Metrics")
@@ -2746,13 +2804,31 @@ elif st.session_state["nav_selection"] == "🎙️ Single Evaluation":
         with m_col1:
             st.metric("Word Error Rate (WER)", f"{metrics['wer']:.2f}%", help="Lower is better. 0% represents a perfect word-level match.")
         with m_col2:
-            if cer_metrics:
+            if cer_metrics and "cer" in cer_metrics:
                 st.metric("Character Error Rate (CER)", f"{cer_metrics['cer']:.2f}%", help="Character-level edit distance evaluated over Unicode UAX #29 extended grapheme clusters.")
             else:
                 st.metric("Character Error Rate (CER)", "N/A")
         with m_col3:
-            crit_rate = crit_results["match_rate"]
-            st.metric("Critical Entity Match", f"{crit_rate:.1f}%", help="Retention of high-stakes entities: numbers, dates, times, currencies, phone numbers, negations, and names.")
+            if crit_results and isinstance(crit_results, dict) and ("match_rate" in crit_results or "accuracy" in crit_results):
+                crit_rate = crit_results.get("match_rate", crit_results.get("accuracy"))
+                if crit_results.get("total_items", 0) > 0 and crit_rate is not None:
+                    st.metric(
+                        "Critical Entity Match",
+                        f"{crit_rate:.1f}%",
+                        help="Retention of high-stakes entities: numbers, dates, times, currencies, phone numbers, negations, and names."
+                    )
+                else:
+                    st.metric(
+                        "Critical Entity Match",
+                        "N/A",
+                        help="No domain-critical entities (numbers, dates, times, currencies, phone numbers, negations, or names) detected in reference text."
+                    )
+            else:
+                st.metric(
+                    "Critical Entity Match",
+                    "N/A",
+                    help="Critical information evaluation is unavailable or could not be completed."
+                )
         with m_col4:
             st.metric("Total Word Errors", f"{metrics['errors']}", help="Sum of word substitutions, deletions, and insertions.")
 
@@ -2823,7 +2899,7 @@ elif st.session_state["nav_selection"] == "🎙️ Single Evaluation":
 
         # Critical Entities Comparison Table
         st.markdown("#### 🛡️ Critical Information Detection & Entity Alignment")
-        if crit_results["details"]:
+        if crit_results and isinstance(crit_results, dict) and crit_results.get("details"):
             df_crit = pd.DataFrame(crit_results["details"])
             st.dataframe(df_crit, use_container_width=True)
         else:
@@ -2832,6 +2908,14 @@ elif st.session_state["nav_selection"] == "🎙️ Single Evaluation":
         # Download Reports
         st.markdown("#### 📥 Diagnostic Reports & Export")
         audio_name = st.session_state.get("audio_name", "recording")
+        if crit_results and isinstance(crit_results, dict) and crit_results.get("total_items", 0) > 0 and ("match_rate" in crit_results or "accuracy" in crit_results):
+            crit_rep_rate = crit_results.get("match_rate", crit_results.get("accuracy"))
+            crit_match_str = f"{crit_rep_rate:.1f}%"
+        elif crit_results and isinstance(crit_results, dict) and crit_results.get("total_items", 0) == 0:
+            crit_match_str = "N/A (No entities in reference)"
+        else:
+            crit_match_str = "N/A (Unavailable)"
+
         report_txt = (
             "NADHAM QA - SPEECH RECOGNITION TEST REPORT\n"
             f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
@@ -2839,7 +2923,7 @@ elif st.session_state["nav_selection"] == "🎙️ Single Evaluation":
             f"Language: {st.session_state.get('language', 'Malayalam')}\n"
             f"WER: {metrics['wer']:.2f}%\n"
             f"CER: {cer_metrics['cer'] if cer_metrics else 'N/A'}%\n"
-            f"Critical Match Rate: {crit_results['match_rate']:.1f}%\n\n"
+            f"Critical Match Rate: {crit_match_str}\n\n"
             "Reference Transcript:\n"
             f"{ref_text}\n\n"
             "Recognized Transcript:\n"
@@ -3016,7 +3100,7 @@ elif st.session_state["nav_selection"] == "🔬 Clean vs Noisy":
             st.download_button("📥 Download Comparison Report (.txt)", txt_rep, file_name="NADHAM_QA_Comparison_Report.txt", mime="text/plain", use_container_width=True)
         with dl_c2:
             csv_rep = generate_comparison_csv(comp)
-            st.download_button("📊 Download Comparison CSV (.csv)", csv_rep.encode("utf-8"), file_name="NADHAM_QA_Comparison.csv", mime="text/csv", use_container_width=True)
+            st.download_button("📊 Download Comparison CSV (.csv)", csv_rep if isinstance(csv_rep, bytes) else csv_rep.encode("utf-8"), file_name="NADHAM_QA_Comparison.csv", mime="text/csv", use_container_width=True)
 
 
 # -----------------------------------------------------------------------------

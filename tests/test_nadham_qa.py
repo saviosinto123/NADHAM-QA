@@ -3,6 +3,7 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 import pytest
+from streamlit.testing.v1 import AppTest
 
 # Ensure the app directory is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -519,6 +520,130 @@ class TestCriticalInformation:
         assert "Number" not in categories
         assert "Date" in categories
         assert "Time" in categories
+
+
+# =====================================================================
+# 3b. Critical Information Key Consistency & Regression Tests
+# =====================================================================
+
+class TestCriticalInfoKeyRegression:
+    """
+    Regression test suite ensuring match_rate key consistency and robust handling
+    across all evaluation scenarios:
+    - Normal critical-information evaluation with both 'accuracy' and 'match_rate' keys.
+    - Empty reference and recognized transcripts.
+    - Missing, corrupted, or incomplete evaluation dictionary structures.
+    - None and non-string inputs.
+    - Safe dashboard rendering when critical information is unavailable.
+    """
+
+    def test_normal_critical_info_evaluation_keys_and_values(self):
+        """compare_critical_entities returns both 'accuracy' and 'match_rate' keys with identical values."""
+        ref = "വില ₹500 ആണ് തീയതി 15/11/2026"
+        hyp = "വില ₹500 ആണ് തീയതി 15/11/2026"
+        res = compare_critical_entities(ref, hyp)
+
+        assert "match_rate" in res, "Expected 'match_rate' key in return dictionary"
+        assert "accuracy" in res, "Expected 'accuracy' key in return dictionary"
+        assert res["match_rate"] == 100.0
+        assert res["accuracy"] == 100.0
+        assert res["total_items"] == 2
+        assert res["matching_items"] == 2
+        assert res["changed_items"] == 0
+        assert res["missing_items"] == 0
+        assert res["extra_items"] == 0
+        assert isinstance(res["details"], list)
+        assert len(res["details"]) == 2
+
+    def test_partial_critical_info_evaluation_keys(self):
+        """Partial retention computes correct match_rate and preserves key consistency."""
+        ref = "വില ₹500 ആണ് തീയതി 15/11/2026"
+        hyp = "വില ₹100 ആണ് തീയതി 15/11/2026"
+        res = compare_critical_entities(ref, hyp)
+
+        assert res["match_rate"] == 50.0
+        assert res["accuracy"] == 50.0
+        assert res["total_items"] == 2
+        assert res["matching_items"] == 1
+        assert res["changed_items"] == 1
+
+    def test_empty_reference_and_recognized_transcripts(self):
+        """Empty inputs safely return complete dictionary with match_rate without KeyError."""
+        res = compare_critical_entities("", "")
+
+        assert "match_rate" in res
+        assert "accuracy" in res
+        assert res["total_items"] == 0
+        assert res["matching_items"] == 0
+        assert res["details"] == []
+
+    def test_zero_critical_entities_in_transcripts(self):
+        """Transcripts with no domain entities return total_items=0 and both rate keys."""
+        ref = "നമസ്കാരം സുഖമാണോ"
+        hyp = "നമസ്കാരം സുഖമാണോ"
+        res = compare_critical_entities(ref, hyp)
+
+        assert "match_rate" in res
+        assert "accuracy" in res
+        assert res["total_items"] == 0
+        assert res["details"] == []
+
+    def test_none_and_non_string_inputs_safety(self):
+        """None or non-string inputs are handled safely without raising unhandled exceptions."""
+        res_none = compare_critical_entities(None, None)
+        assert "match_rate" in res_none
+        assert res_none["total_items"] == 0
+
+        res_invalid = compare_critical_entities(12345, None)
+        assert "match_rate" in res_invalid
+        assert res_invalid["total_items"] == 0
+
+    def test_missing_or_incomplete_evaluation_results_handling(self):
+        """Safe extraction patterns never misrepresent missing results as genuine 0.0% match."""
+        # Simulated incomplete dictionary missing match_rate
+        incomplete_dict = {"total_items": 1, "accuracy": 85.0}
+        rate = incomplete_dict.get("match_rate", incomplete_dict.get("accuracy"))
+        assert rate == 85.0
+
+        # Simulated empty dictionary from failed evaluation
+        failed_eval = {}
+        safe_rate = failed_eval.get("match_rate", failed_eval.get("accuracy"))
+        assert safe_rate is None  # Must NOT default to 0.0 without check
+
+        # None evaluation
+        none_eval = None
+        rate_from_none = none_eval.get("match_rate") if isinstance(none_eval, dict) else None
+        assert rate_from_none is None
+
+    def test_apptest_single_evaluation_rendering_with_critical_entities(self):
+        """Dashboard renders Single Evaluation Critical Entity Match metric accurately."""
+        app_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "app.py"))
+        at = AppTest.from_file(app_file, default_timeout=30)
+        at.run()
+        at.radio[0].set_value("🎙️ Single Evaluation")
+        at.session_state["reference"] = "തുക ₹500 ആണ്"
+        at.session_state["transcript"] = "തുക ₹500 ആണ്"
+        at.run()
+
+        assert not at.exception, f"AppTest threw exception: {at.exception}"
+        metrics = {m.label: m.value for m in at.metric}
+        assert "Critical Entity Match" in metrics
+        assert metrics["Critical Entity Match"] == "100.0%"
+
+    def test_apptest_single_evaluation_rendering_without_critical_entities(self):
+        """Dashboard renders N/A for Critical Entity Match when no entities exist in reference."""
+        app_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "app.py"))
+        at = AppTest.from_file(app_file, default_timeout=30)
+        at.run()
+        at.radio[0].set_value("🎙️ Single Evaluation")
+        at.session_state["reference"] = "നമസ്കാരം സുഖമാണോ"
+        at.session_state["transcript"] = "നമസ്കാരം സുഖമാണോ"
+        at.run()
+
+        assert not at.exception, f"AppTest threw exception: {at.exception}"
+        metrics = {m.label: m.value for m in at.metric}
+        assert "Critical Entity Match" in metrics
+        assert metrics["Critical Entity Match"] == "N/A"
 
 
 # =====================================================================

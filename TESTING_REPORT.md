@@ -2,8 +2,8 @@
 
 **Environment:** Python 3.14.8 | Pytest 9.2.0 | Streamlit 1.67.0 | Windows  
 **Test Suite Path:** `tests/test_nadham_qa.py`  
-**Execution Result:** **32 Passed / 32 Total (100% Pass Rate)**  
-**Streamlit AppTest:** **100% Passed (Clean Headless UI Verification)**
+**Execution Result:** **101 Passed / 101 Total (100% Pass Rate)**  
+**Streamlit AppTest:** **100% Passed (Clean Headless UI Verification across all 3 Tabs)**
 
 ---
 
@@ -11,12 +11,18 @@
 
 | Category | Tests | Status | Execution Time |
 | :--- | :---: | :---: | :---: |
-| **Malayalam Unicode & Normalization** | 10 | **PASSED** | 0.82s |
-| **WER & Alignment Operations** | 10 | **PASSED** | 0.54s |
-| **Critical Information (Dates, Decimals, Currencies)** | 3 | **PASSED** | 0.22s |
-| **Gnani API Client & Error Handling** | 7 | **PASSED** | 0.48s |
-| **Downloadable Report & CSV Exports** | 2 | **PASSED** | 0.35s |
-| **Total** | **32** | **PASSED** | **~8.16s** |
+| **Malayalam Unicode & Normalization** | 10 | **PASSED** | ~0.70s |
+| **WER & Alignment Operations** | 10 | **PASSED** | ~0.50s |
+| **CER (Unicode Extended Grapheme Clusters)** | 12 | **PASSED** | ~0.70s |
+| **Critical Information Detection & Alignment** | 21 | **PASSED** | ~1.00s |
+| **Gnani API Client, Security & Dual-Source Keys** | 10 | **PASSED** | ~0.60s |
+| **Downloadable Reports & CSV Exports** | 2 | **PASSED** | ~0.20s |
+| **Audio Quality Analysis (Local Acoustic Metrics)** | 8 | **PASSED** | ~0.40s |
+| **Clean vs. Noisy Comparison Benchmark** | 11 | **PASSED** | ~0.60s |
+| **Benchmark Dataset Discovery & Validation** | 7 | **PASSED** | ~0.40s |
+| **Benchmark Batch Evaluation & Exact Aggregate Formulas** | 6 | **PASSED** | ~0.40s |
+| **Benchmark Evidence Reporting (TXT & CSV Exports)** | 4 | **PASSED** | ~0.30s |
+| **Total** | **101** | **PASSED** | **~5.92s** |
 
 ---
 
@@ -65,6 +71,29 @@
 31. `TestReportGeneration::test_report_content_completeness` — Verifies TXT report formatting, timestamp, audio filename, metrics, and operations table.
 32. `TestReportGeneration::test_csv_export_structure` — Verifies CSV DataFrame export containing `Status`, `Reference Word`, and `Recognized Word` columns.
 
+### 2.7 Benchmark Dataset Discovery Tests (7 Tests)
+33. `TestBenchmarkDatasetDiscovery::test_extract_sample_id_extensions` — Validates sample ID extraction across repeated extensions (`.mp3.mp3`, `.mp3.txt`).
+34. `TestBenchmarkDatasetDiscovery::test_discover_benchmark_dataset_real_repo` — Validates discovery of exactly 5 genuine Malayalam samples in `dataset/normal/` with matching transcripts.
+35. `TestBenchmarkDatasetDiscovery::test_discover_missing_audio` — Detects transcripts missing corresponding audio files (`status="missing_audio"`).
+36. `TestBenchmarkDatasetDiscovery::test_discover_missing_transcript` — Detects audio recordings missing reference transcripts (`status="missing_transcript"`).
+37. `TestBenchmarkDatasetDiscovery::test_discover_empty_transcript` — Catches empty or whitespace-only transcript files (`status="empty_transcript"`).
+38. `TestBenchmarkDatasetDiscovery::test_discover_empty_audio` — Catches 0-byte corrupted audio files (`status="invalid_audio"`).
+39. `TestBenchmarkDatasetDiscovery::test_discover_paired_noise_status_true_when_noisy_folder_present` — Accurately detects when noisy audio directory is present vs absent.
+
+### 2.8 Benchmark Batch Evaluation Tests (6 Tests)
+40. `TestBenchmarkBatchEvaluation::test_evaluate_batch_exact_aggregate_formulas` — Verifies that Aggregate WER and CER use global error quotients ($\sum \text{errors} / \sum \text{units}$) rather than arithmetic averages of percentages.
+41. `TestBenchmarkBatchEvaluation::test_evaluate_batch_partial_api_failure` — Validates that upstream API failures on individual samples are isolated, marked as `Failed`, and safely excluded from aggregate WER/CER denominators.
+42. `TestBenchmarkBatchEvaluation::test_evaluate_batch_all_failures` — Ensures that when all samples fail, aggregates return `None` without division by zero.
+43. `TestBenchmarkBatchEvaluation::test_evaluate_batch_skips_invalid_status_samples` — Ensures invalid samples are skipped with 0 API calls.
+44. `TestBenchmarkBatchEvaluation::test_evaluate_batch_empty_selection` — Validates safe handling of an empty sample selection.
+45. `TestBenchmarkBatchEvaluation::test_evaluate_batch_progress_callback` — Verifies progress callback reporting at each evaluation step.
+
+### 2.9 Benchmark Evidence Reporting Tests (4 Tests)
+46. `TestBenchmarkReporting::test_generate_benchmark_summary_txt_structure` — Validates complete plain text benchmark summary structure, inventory, aggregates, breakdown table, and paired noise disclosure.
+47. `TestBenchmarkReporting::test_summary_txt_security_no_api_key_leak` — Verifies no API keys, Bearer tokens, or credentials appear in TXT report.
+48. `TestBenchmarkReporting::test_generate_benchmark_sample_csv_content` — Validates CSV schema, headers, and per-sample rows.
+49. `TestBenchmarkReporting::test_generate_benchmark_aggregate_csv_content` — Validates aggregate CSV schema with metrics, values, units, and descriptions.
+
 ---
 
 ## 3. Pytest Execution Console Output
@@ -72,44 +101,14 @@
 ```text
 ============================= test session starts =============================
 platform win32 -- Python 3.14.8, pytest-9.2.0, pluggy-1.7.0
-rootdir: c:\Users\user
+rootdir: C:\Users\user\NADHAM-QA\NADHAM-QA
 plugins: anyio-4.16.0
-collected 32 items
+collected 101 items
 
-tests\test_nadham_qa.py::TestNormalization::test_basic_english_normalization PASSED           [  3%]
-tests\test_nadham_qa.py::TestNormalization::test_malayalam_basic_tokenization PASSED          [  6%]
-tests\test_nadham_qa.py::TestNormalization::test_malayalam_atomic_vs_legacy_chillu PASSED     [  9%]
-tests\test_nadham_qa.py::TestNormalization::test_malayalam_zero_width_space PASSED            [ 12%]
-tests\test_nadham_qa.py::TestNormalization::test_currency_symbol_handling PASSED              [ 15%]
-tests\test_nadham_qa.py::TestNormalization::test_decimal_numbers_handling PASSED              [ 18%]
-tests\test_nadham_qa.py::TestNormalization::test_all_six_malayalam_chillus PASSED             [ 21%]
-tests\test_nadham_qa.py::TestNormalization::test_various_currency_symbols PASSED              [ 25%]
-tests\test_nadham_qa.py::TestNormalization::test_mixed_sentence_with_dates_and_decimals PASSED [ 28%]
-tests\test_nadham_qa.py::TestNormalization::test_hyphenated_words PASSED                      [ 31%]
-tests\test_nadham_qa.py::TestWERCAlculation::test_exact_match PASSED                           [ 34%]
-tests\test_nadham_qa.py::TestWERCAlculation::test_single_substitution PASSED                  [ 37%]
-tests\test_nadham_qa.py::TestWERCAlculation::test_single_deletion PASSED                      [ 40%]
-tests\test_nadham_qa.py::TestWERCAlculation::test_single_insertion PASSED                     [ 43%]
-tests\test_nadham_qa.py::TestWERCAlculation::test_wer_exceeding_100_percent PASSED            [ 46%]
-tests\test_nadham_qa.py::TestWERCAlculation::test_all_deletions_empty_hypothesis PASSED        [ 50%]
-tests\test_nadham_qa.py::TestWERCAlculation::test_empty_reference_returns_none PASSED          [ 53%]
-tests\test_nadham_qa.py::TestWERCAlculation::test_punctuation_only_reference_returns_none PASSED [ 56%]
-tests\test_nadham_qa.py::TestWERCAlculation::test_both_empty_returns_none PASSED              [ 59%]
-tests\test_nadham_qa.py::TestWERCAlculation::test_operations_sum_matches_error_count PASSED  [ 62%]
-tests\test_nadham_qa.py::TestCriticalInformation::test_dates_format_preserved PASSED         [ 65%]
-tests\test_nadham_qa.py::TestCriticalInformation::test_number_spoken_vs_digits PASSED         [ 68%]
-tests\test_nadham_qa.py::TestCriticalInformation::test_indian_number_commas PASSED            [ 71%]
-tests\test_nadham_qa.py::TestGnaniAPI::test_missing_api_key_raises_value_error PASSED        [ 75%]
-tests\test_nadham_qa.py::TestGnaniAPI::test_successful_api_call PASSED                       [ 78%]
-tests\test_nadham_qa.py::TestGnaniAPI::test_api_http_error_handling PASSED                   [ 81%]
-tests\test_nadham_qa.py::TestGnaniAPI::test_api_business_failure_handling PASSED             [ 84%]
-tests\test_nadham_qa.py::TestGnaniAPI::test_zero_byte_audio_rejected PASSED                  [ 87%]
-tests\test_nadham_qa.py::TestGnaniAPI::test_audio_upload_size_limit_enforced PASSED         [ 90%]
-tests\test_nadham_qa.py::TestGnaniAPI::test_html_gateway_error_sanitized PASSED              [ 93%]
-tests\test_nadham_qa.py::TestReportGeneration::test_report_content_completeness PASSED       [ 96%]
-tests\test_nadham_qa.py::TestReportGeneration::test_csv_export_structure PASSED               [100%]
+tests/test_nadham_qa.py ................................................................ [ 63%]
+.....................................                                                    [100%]
 
-============================== 32 passed in 8.16s ==============================
+============================= 101 passed in 5.04s =============================
 ```
 
 ---
@@ -117,9 +116,22 @@ tests\test_nadham_qa.py::TestReportGeneration::test_csv_export_structure PASSED 
 ## 4. Streamlit AppTest Headless Results
 
 Headless UI execution via Streamlit's official testing framework (`streamlit.testing.v1.AppTest`):
-- **UI Initialization:** Loaded all elements (Header, File Uploader, Selectbox, Text Area, Run Button) with zero exceptions.
+- **UI Initialization:** Loaded all elements across all 3 tabs (`🎙️ Single Evaluation`, `🔬 Clean vs. Noisy Comparison`, and `📊 Malayalam Benchmark & Reliability Evidence`) with zero exceptions.
 - **Empty Audio Validation:** Click with no audio produced expected notification `Please upload an audio file.`
 - **Zero-Byte Audio Validation:** Intercepted empty audio file and blocked network dispatch.
 - **Punctuation-Only Text Validation:** Caught `...` text and presented clean validation error.
 - **Evaluation Flow:** Simulated API response correctly triggered metrics cards, word-level table, and download buttons.
 - **Error Sanitization:** Verified that simulated 504 HTML response rendered a sanitized error message without raw HTML.
+- **Clean vs. Noisy Comparison UI & Validation:**
+  - Tab 2 switch and button click verified.
+  - Intercepted missing clean audio with `Please upload the clean audio recording.`
+  - Validated clean vs noisy comparison computation, delta metrics, TXT comparison report, and CSV metrics export.
+- **Malayalam Benchmark & Reliability Evidence UI & Validation (Tab 3):**
+  - Verified 4 dataset overview cards (`Discovered Samples: 5`, `Verified Valid: 5`, `Acoustic Condition: Normal/Clean (5)`, `Paired Noise Status: Unavailable (0 pairs)`).
+  - Verified explicit Paired Clean vs. Noisy transparency alert (`Paired Clean vs. Noisy Benchmark Status: Unavailable`).
+  - Verified benchmark sample multiselect and credit warning notice.
+  - Verified benchmark execution button (`🚀 Execute Malayalam Benchmark`).
+  - Simulated batch benchmark execution and verified aggregate metrics cards (`Aggregate WER`, `Aggregate CER`, `Benchmark Success Rate`, `Critical Entity Match`).
+  - Verified interactive sample-level results table (`st.dataframe`).
+  - Verified individual sample transcript expander.
+  - Verified all 3 evidence export download buttons (`📥 Benchmark Summary (TXT)`, `📊 Sample-Level CSV`, `📈 Aggregate Metrics CSV`).

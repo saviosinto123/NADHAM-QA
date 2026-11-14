@@ -1,0 +1,28 @@
+# Environments & Credentials
+.env
+.env.*
+!.env.example
+*.env
+.streamlit/secrets.toml
+.venv/
+venv/
+ENV/
+env/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Backups & Scratch
+*.bak
+*.pre_*.bak
+*.tmp
+scratch/
+
+# OS metadata
+.DS_Store
+Thumbs.db

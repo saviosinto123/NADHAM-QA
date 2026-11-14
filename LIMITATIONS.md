@@ -4,27 +4,17 @@ In adherence to strict engineering integrity and scientific reporting standards,
 
 ---
 
-## 1. Upstream Gnani Prisma API (HTTP 504 Gateway Timeout)
+## 1. Upstream Gnani Prisma API Testing & Verification Status
 
-### 1.1 Observed Live Behavior
-During live application testing using the local environment credentials (`GNANI_API_KEY`) and valid 16kHz PCM audio (`clean_sample.wav`), requests dispatched to the live endpoint:
-```text
-POST https://api.vachana.ai/stt/v3
-```
-returned:
-```text
-HTTP 504 Gateway Time-out
-Cloudflare / Upstream Server Latency
-```
+### 1.1 Observed Live API Behavior
+During testing of the live Gnani Prisma endpoint (`https://api.vachana.ai/stt/v3`):
+- **Earlier HTTP 504 Timeout:** An earlier API request encountered an upstream Cloudflare `HTTP 504 Gateway Time-out` due to temporary server latency. The client-side HTML error sanitizer successfully intercepted the response, shielding the user interface from raw HTML error pages.
+- **Successful Live Test:** In a subsequent live evaluation, one live Malayalam speech recording was successfully transcribed by Gnani Prisma STT with **8/8 words correct (0% WER)** against ground truth.
 
-### 1.2 Impact on Verification
-- **What Was Verified:**
-  - Header structure (`X-API-Key-ID: <KEY>`) and request dispatch are implemented correctly.
-  - Multipart payload construction (`audio_file`, `language_code`, `format: "verbatim"`) is fully functional.
-  - The client-side HTML error sanitizer successfully intercepted the Cloudflare HTML error and prevented UI breakage.
-- **What Remains Unverified:**
-  - **End-to-End Transcription Accuracy:** Live transcription accuracy on a real spoken voice sample cannot be verified until the upstream Gnani/Vachana gateway resolves its latency.
-  - **No Live Claim Made:** We do not claim successful live transcription on this endpoint until a 200 OK response with real transcribed text is achieved.
+### 1.2 Evaluation Scope & Statistical Limits
+- **Single-Sample Scope:** While the successful live test confirms that endpoint connectivity, authentication (`X-API-Key-ID`), audio payload streaming, and transcription work end-to-end, **one successful sample does not establish general Malayalam transcription accuracy across diverse speakers, accents, or vocabularies**.
+- **Benchmark Scope:** The reproducible benchmark platform contains **five normal Malayalam speech recordings** (`dataset/normal/`) with verified ground-truth transcripts.
+- **Absence of Paired Noisy Samples:** The benchmark dataset **does not contain genuine noisy recording pairs**. NADHAM QA transparently discloses this absence on the benchmark dashboard and in generated evidence reports rather than synthesizing artificial noise or claiming unverified noise robustness.
 
 ---
 
@@ -43,15 +33,24 @@ Malayalam is an agglutinative language where suffixes, postpositions, and case m
 
 ---
 
-## 3. Application Interface Limitations
+## 3. Application Interface & Audio Analysis Limitations
 
-### 3.1 Single Audio Processing
-- The current interface evaluates one audio file at a time.
-- Comparative evaluations (e.g. testing clean audio vs. background-noise audio side-by-side) currently require sequential runs rather than a dual-file comparison screen.
+### 3.1 Local Acoustic Analysis Format Scope
+- **PCM WAV Only:** Local acoustic signal measurement (duration, sample rate, channels, RMS energy, peak amplitude, clipping percentage, and silence percentage) relies on Python standard library `wave` and `numpy`.
+- **Compressed Audio Passthrough:** Compressed formats (`.mp3`, `.m4a`, `.ogg`, `.flac`, `.aac`) are accepted for Gnani ASR without local decoding, but acoustic metric computation reports `supported=False` rather than inventing synthetic numbers.
+- **Noise Robustness Scope:** Clean vs. Noisy comparisons are empirical benchmarks of the uploaded paired files. They do not constitute an abstract theoretical claim of noise immunity across all acoustic environments.
 
-### 3.2 Unweighted Entity Error Rate
-- In domain-specific applications (e.g. medical, banking, legal), a misrecognized proper name, phone number, or dosage is far more critical than a missed filler word.
-- The current system applies equal unit weight ($cost = 1$) to all words.
+### 3.2 Dual-File Benchmark Scope
+- Dual-file comparison supports 1 Clean audio file and 1 Noisy audio file against a shared reference transcript.
+- Multi-speaker diarization and full batch multi-file sweeps are planned for subsequent milestones.
+
+### 3.3 Rule-Based Entity Extraction Scope
+- Domain-critical entity detection uses deterministic pattern matching. Complex semantic paraphrases or rare regional names outside the benchmark dictionary require human verification.
+
+### 3.4 Benchmark Dataset Inventory & Genuine Paired Noise Status
+- **Verified Dataset Scope:** The repository contains exactly 5 genuine Malayalam speech recordings in `dataset/normal/` (`ML_NORMAL_01.mp3.mp3` through `ML_NORMAL_05.mp3.mp3`) with verified reference transcripts in `dataset/transcripts/`.
+- **Paired Noise Reality:** Genuine paired clean-versus-noisy audio files are unavailable in the current benchmark dataset (`dataset/noisy/` is absent).
+- **Engineering Integrity Policy:** NADHAM QA refuses to fabricate simulated background noise, inject synthetic noise artifacts, or generate unverified comparative statistics. The platform transparently discloses this condition on the benchmark dashboard and within all generated evidence reports.
 
 ---
 

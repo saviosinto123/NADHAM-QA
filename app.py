@@ -21,75 +21,505 @@ MAX_AUDIO_BYTES = 25 * 1024 * 1024  # 25 MB upload limit
 # -----------------------------------------------------------------------------
 # Streamlit Page Configuration
 # -----------------------------------------------------------------------------
+
 st.set_page_config(
     page_title="NADHAM QA | Speech Recognition Intelligence",
     page_icon="🎙️",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # -----------------------------------------------------------------------------
-# Custom Styling - Modern Dark Navy & Blue Analytics Theme
+# Custom Styling - Modern Dark Navy & Electric Purple/Cyan SaaS Dashboard Theme
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
-    /* Global Page Styling */
+    /* Google Fonts & Base Typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap');
+
+    /* Color Palette:
+       Background: Deep navy (#080D20)
+       Sidebar: Dark navy (#10162D)
+       Cards: Slightly lighter navy (#151D38)
+       Primary accent: Electric purple (#7545FF)
+       Secondary accent: Cyan blue (#21B8FF)
+       Success: Green (#28D98A)
+       Main text: White (#F8FAFC)
+       Secondary text: Soft grey (#94A3B8)
+    */
+
+    /* Global App Container */
     .stApp {
-        background-color: #0B1120;
-        color: #F1F5F9;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: #080D20 !important;
+        color: #F8FAFC !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Malayalam", sans-serif !important;
     }
 
-    /* Branded Header Container */
-    .brand-header {
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-        border: 1px solid #334155;
-        border-radius: 14px;
-        padding: 24px 28px;
-        margin-bottom: 24px;
-        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+    /* Streamlit Main View Padding */
+    .main .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 3rem !important;
+        max-width: 1280px !important;
     }
-    .brand-title {
-        color: #F8FAFC;
-        margin: 0;
-        font-size: 30px;
-        font-weight: 700;
-        letter-spacing: -0.5px;
+
+    /* Fixed-Style Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #10162D !important;
+        border-right: 1px solid rgba(117, 69, 255, 0.15) !important;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    section[data-testid="stSidebar"] div.block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 2rem !important;
+    }
+
+    /* Sidebar Branding Box */
+    .sidebar-brand-box {
+        padding: 4px 0 16px 0;
+    }
+    .brand-row {
         display: flex;
         align-items: center;
         gap: 12px;
     }
-    .brand-tag {
-        font-size: 13px;
-        font-weight: 600;
-        background: rgba(37, 99, 235, 0.15);
-        color: #60A5FA;
-        border: 1px solid #2563EB;
-        border-radius: 9999px;
-        padding: 3px 12px;
-        vertical-align: middle;
+    .brand-icon-wrapper {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, rgba(117, 69, 255, 0.25) 0%, rgba(33, 184, 255, 0.15) 100%);
+        border: 1px solid rgba(117, 69, 255, 0.4);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(117, 69, 255, 0.2);
     }
-    .brand-desc {
+    .brand-title-wrap {
+        display: flex;
+        flex-direction: column;
+    }
+    .brand-title-text {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: #FFFFFF;
+        line-height: 1.1;
+    }
+    .brand-subtitle-text {
         color: #94A3B8;
-        margin: 6px 0 0 0;
+        font-size: 11.5px;
+        font-weight: 500;
+        margin-top: 6px;
+        letter-spacing: 0.2px;
+    }
+    .sidebar-sep {
+        height: 1px;
+        background: linear-gradient(90deg, rgba(117, 69, 255, 0.3) 0%, rgba(33, 184, 255, 0.1) 50%, transparent 100%);
+        margin: 14px 0 18px 0;
+    }
+    .sidebar-nav-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        color: #64748B;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+
+    /* Sidebar Navigation Radio Items */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] > div {
+        gap: 6px !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
+        background-color: transparent !important;
+        border-radius: 8px !important;
+        padding: 9px 12px !important;
+        color: #94A3B8 !important;
+        font-weight: 500 !important;
+        font-size: 13.5px !important;
+        transition: all 0.2s ease !important;
+        border: 1px solid transparent !important;
+        cursor: pointer !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
+        background-color: rgba(117, 69, 255, 0.12) !important;
+        color: #FFFFFF !important;
+        border-color: rgba(117, 69, 255, 0.25) !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) {
+        background: linear-gradient(90deg, rgba(117, 69, 255, 0.25) 0%, rgba(33, 184, 255, 0.1) 100%) !important;
+        color: #FFFFFF !important;
+        border-left: 3px solid #7545FF !important;
+        border-color: rgba(117, 69, 255, 0.35) !important;
+        font-weight: 600 !important;
+    }
+
+    /* Sidebar Bottom Status Card */
+    .sidebar-bottom-card {
+        background: #151D38;
+        border: 1px solid rgba(117, 69, 255, 0.2);
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-top: 20px;
+    }
+    .engine-badge {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    .engine-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #94A3B8;
+        letter-spacing: 0.5px;
+    }
+    .engine-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: #21B8FF;
+    }
+    .security-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .sec-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #28D98A;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #28D98A;
+        display: inline-block;
+    }
+    .sec-text {
+        font-size: 11px;
+        font-weight: 500;
+        color: #28D98A;
+    }
+
+    /* Kerala-Inspired Dashboard Hero Banner */
+    .hero-banner {
+        background: linear-gradient(135deg, #0D142E 0%, #151D38 55%, #181938 100%);
+        border: 1px solid rgba(117, 69, 255, 0.3);
+        border-radius: 16px;
+        padding: 30px 34px 26px 34px;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    .hero-banner::before {
+        content: "";
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(117, 69, 255, 0.28) 0%, rgba(33, 184, 255, 0.12) 40%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .hero-content {
+        max-width: 600px;
+        z-index: 1;
+    }
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(117, 69, 255, 0.15);
+        border: 1px solid rgba(117, 69, 255, 0.35);
+        color: #C084FC;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 11.5px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        letter-spacing: 0.3px;
+    }
+    .hero-title {
+        color: #FFFFFF;
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -0.6px;
+        margin: 0 0 8px 0;
+        line-height: 1.2;
+    }
+    .hero-grad-text {
+        background: linear-gradient(135deg, #21B8FF 0%, #7545FF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero-subtitle {
+        color: #94A3B8;
         font-size: 15px;
         font-weight: 400;
+        line-height: 1.5;
+        margin: 0 0 18px 0;
+    }
+    .hero-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+    }
+    .meta-label {
+        color: #64748B;
+        font-weight: 500;
+    }
+    .meta-val {
+        color: #E2E8F0;
+        font-weight: 600;
+    }
+    .meta-divider {
+        width: 4px;
+        height: 4px;
+        background-color: #475569;
+        border-radius: 50%;
+    }
+    .hero-graphic {
+        z-index: 1;
+        opacity: 0.95;
+    }
+
+    /* Metric KPI Cards */
+    .kpi-card {
+        background-color: #151D38;
+        border: 1px solid rgba(117, 69, 255, 0.2);
+        border-radius: 14px;
+        padding: 20px 22px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 148px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+        margin-bottom: 12px;
+    }
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(33, 184, 255, 0.45);
+    }
+    .kpi-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .kpi-label {
+        font-size: 11.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #94A3B8;
+    }
+    .kpi-icon {
+        font-size: 18px;
+        padding: 6px 9px;
+        background: rgba(117, 69, 255, 0.12);
+        border-radius: 8px;
+        border: 1px solid rgba(117, 69, 255, 0.2);
+    }
+    .kpi-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: #FFFFFF;
+        line-height: 1.1;
+        margin-bottom: 6px;
+    }
+    .kpi-subtitle {
+        font-size: 12px;
+        color: #94A3B8;
+        margin-bottom: 10px;
+    }
+    .kpi-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 9999px;
+        align-self: flex-start;
+    }
+
+    /* Quick Access Module Cards */
+    .module-card {
+        background: linear-gradient(145deg, #151D38 0%, #11172E 100%);
+        border: 1px solid rgba(117, 69, 255, 0.2);
+        border-radius: 14px;
+        padding: 22px;
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+        margin-bottom: 10px;
+    }
+    .module-card:hover {
+        border-color: rgba(117, 69, 255, 0.45);
+        box-shadow: 0 8px 24px rgba(117, 69, 255, 0.15);
+        transform: translateY(-2px);
+    }
+    .module-num {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .module-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #FFFFFF;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .module-desc {
+        font-size: 13px;
+        color: #94A3B8;
+        line-height: 1.5;
+        flex-grow: 1;
+        margin-bottom: 12px;
+    }
+
+    /* Dashboard Cards / General Container Cards */
+    .dashboard-card {
+        background-color: #151D38;
+        border: 1px solid rgba(117, 69, 255, 0.2);
+        border-radius: 12px;
+        padding: 20px 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        margin-bottom: 20px;
+    }
+
+    /* Primary and Secondary Buttons */
+    div.stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #7545FF 0%, #21B8FF 100%) !important;
+        color: #FFFFFF !important;
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        padding: 10px 22px !important;
+        border-radius: 10px !important;
+        border: none !important;
+        box-shadow: 0 4px 16px rgba(117, 69, 255, 0.35) !important;
+        transition: all 0.2s ease !important;
+    }
+    div.stButton > button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #8B5CF6 0%, #38BDF8 100%) !important;
+        box-shadow: 0 6px 22px rgba(117, 69, 255, 0.55) !important;
+        transform: translateY(-1px) !important;
+    }
+    div.stButton > button[kind="secondary"] {
+        background-color: #151D38 !important;
+        color: #F8FAFC !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        border: 1px solid rgba(117, 69, 255, 0.25) !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+    div.stButton > button[kind="secondary"]:hover {
+        border-color: #21B8FF !important;
+        color: #21B8FF !important;
+        background-color: #1A2447 !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Form Controls & Inputs */
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="input"] > div,
+    div[data-baseweb="textarea"] > div {
+        background-color: #151D38 !important;
+        border-color: rgba(117, 69, 255, 0.25) !important;
+        color: #F8FAFC !important;
+        border-radius: 8px !important;
+    }
+    div[data-testid="stFileUploader"] {
+        background-color: #151D38 !important;
+        border: 1px dashed rgba(117, 69, 255, 0.35) !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+    }
+
+    /* Word Error Highlight Badges */
+    .tok-correct {
+        background: rgba(40, 217, 138, 0.15);
+        color: #28D98A;
+        border: 1px solid rgba(40, 217, 138, 0.3);
+        padding: 2px 7px;
+        border-radius: 5px;
+        font-weight: 500;
+        display: inline-block;
+        margin: 2px;
+    }
+    .tok-sub {
+        background: rgba(239, 68, 68, 0.18);
+        color: #F87171;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        padding: 2px 7px;
+        border-radius: 5px;
+        font-weight: 500;
+        display: inline-block;
+        margin: 2px;
+    }
+    .tok-del {
+        background: rgba(249, 115, 22, 0.18);
+        color: #FB923C;
+        border: 1px solid rgba(249, 115, 22, 0.4);
+        padding: 2px 7px;
+        border-radius: 5px;
+        font-weight: 500;
+        text-decoration: line-through;
+        display: inline-block;
+        margin: 2px;
+    }
+    .tok-ins {
+        background: rgba(33, 184, 255, 0.18);
+        color: #60A5FA;
+        border: 1px solid rgba(33, 184, 255, 0.4);
+        padding: 2px 7px;
+        border-radius: 5px;
+        font-weight: 500;
+        display: inline-block;
+        margin: 2px;
     }
 
     /* Status Bar Card */
     .status-card {
-        background: #111827;
-        border: 1px solid #1F2937;
+        background: #151D38;
+        border: 1px solid rgba(117, 69, 255, 0.2);
         border-radius: 10px;
         padding: 12px 16px;
         display: flex;
         flex-direction: column;
         gap: 4px;
+        margin-bottom: 12px;
     }
     .status-card-label {
         color: #94A3B8;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
@@ -99,145 +529,44 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* Section Cards */
-    .panel-card {
-        background: #0F172A;
-        border: 1px solid #1E293B;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
+    /* App Footer */
+    .app-footer {
+        margin-top: 48px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(117, 69, 255, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
     }
-    .panel-header {
-        color: #F8FAFC;
-        font-size: 17px;
-        font-weight: 600;
-        margin-bottom: 14px;
+    .footer-copy {
+        color: #94A3B8;
+        font-size: 13px;
+    }
+    .footer-links {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
     }
-
-    /* Operation Badges */
-    .pill-correct {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34D399;
-        border: 1px solid #059669;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        display: inline-block;
+    .footer-link {
+        color: #21B8FF !important;
+        text-decoration: none !important;
+        font-size: 13px;
+        font-weight: 500;
     }
-    .pill-sub {
-        background: rgba(245, 158, 11, 0.15);
-        color: #FBBF24;
-        border: 1px solid #D97706;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        display: inline-block;
+    .footer-link:hover {
+        color: #7545FF !important;
+        text-decoration: underline !important;
     }
-    .pill-del {
-        background: rgba(239, 68, 68, 0.15);
-        color: #F87171;
-        border: 1px solid #DC2626;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        display: inline-block;
-    }
-    .pill-ins {
-        background: rgba(139, 92, 246, 0.15);
-        color: #A78BFA;
-        border: 1px solid #7C3AED;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        display: inline-block;
-    }
-
-    /* Primary Evaluate Button */
-    div.stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-        color: #FFFFFF;
-        font-size: 16px;
-        font-weight: 600;
-        padding: 12px 24px;
-        border-radius: 10px;
-        border: 1px solid #3B82F6;
-        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
-        transition: all 0.2s ease-in-out;
-    }
-    div.stButton > button[kind="primary"]:hover {
-        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-        border-color: #60A5FA;
-        box-shadow: 0 6px 22px rgba(59, 130, 246, 0.55);
-        transform: translateY(-1px);
-    }
-
-    /* Secondary Compare Button */
-    div.stButton > button[kind="secondary"] {
-        background: #1E293B;
-        color: #38BDF8;
-        font-size: 15px;
-        font-weight: 600;
-        padding: 11px 22px;
-        border-radius: 10px;
-        border: 1px solid #38BDF8;
-        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.15);
-        transition: all 0.2s ease-in-out;
-    }
-    div.stButton > button[kind="secondary"]:hover {
-        background: #38BDF8;
-        color: #0F172A;
-        border-color: #7DD3FC;
-        box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
-        transform: translateY(-1px);
-    }
-
-    /* Audio Quality & Comparison Metric Cards */
-    .audio-card {
-        background: #111827;
-        border: 1px solid #1F2937;
-        border-radius: 10px;
-        padding: 12px 14px;
-        margin-top: 8px;
-    }
-    .delta-badge-better {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34D399;
-        border: 1px solid #059669;
-        border-radius: 6px;
-        padding: 2px 8px;
+    .footer-sep {
+        color: #475569;
         font-size: 12px;
-        font-weight: 600;
-    }
-    .delta-badge-worse {
-        background: rgba(239, 68, 68, 0.15);
-        color: #F87171;
-        border: 1px solid #DC2626;
-        border-radius: 6px;
-        padding: 2px 8px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    .delta-badge-neutral {
-        background: rgba(148, 163, 184, 0.15);
-        color: #94A3B8;
-        border: 1px solid #475569;
-        border-radius: 6px;
-        padding: 2px 8px;
-        font-size: 12px;
-        font-weight: 600;
     }
 </style>
 """, unsafe_allow_html=True)
 
 
-# -----------------------------------------------------------------------------
 # Indic & Malayalam Normalization Pipeline
 # -----------------------------------------------------------------------------
 MALAYALAM_CHILLU_MAP = {
@@ -1612,7 +1941,7 @@ def generate_benchmark_summary_txt(batch_results: dict, dataset_info: dict) -> s
 
     lines = []
     lines.append("=" * 80)
-    lines.append("NADHAM QA 2.0 — MALAYALAM SPEECH RECOGNITION BENCHMARK REPORT")
+    lines.append("NADHAM QA — MALAYALAM SPEECH RECOGNITION BENCHMARK REPORT")
     lines.append("=" * 80)
     lines.append(f"Generated at: {summary.get('timestamp', 'N/A')}")
     lines.append(f"Language: {summary.get('language', 'Malayalam')}")
@@ -1817,13 +2146,15 @@ def generate_benchmark_aggregate_csv(batch_results: dict) -> str:
 
 
 # -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # State Management Initialization
 # -----------------------------------------------------------------------------
 if "eval_history" not in st.session_state:
     st.session_state["eval_history"] = []
 
 if "api_status" not in st.session_state:
-    st.session_state["api_status"] = "Ready (Unverified Live)"
+    st.session_state["api_status"] = "Ready (Dual-Source Secure)"
 
 if "compare_results" not in st.session_state:
     st.session_state["compare_results"] = None
@@ -1834,35 +2165,8 @@ if "audio_quality" not in st.session_state:
 if "benchmark_results" not in st.session_state:
     st.session_state["benchmark_results"] = None
 
-
-# -----------------------------------------------------------------------------
-# APPLICATION INTERFACE
-# -----------------------------------------------------------------------------
-
-# Title for testing compatibility
-st.title("🎙️ NADHAM QA")
-st.subheader("Kerala-first. India-ready.")
-
-# Branded Header Component
-st.markdown("""
-<div class="brand-header">
-    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-        <div>
-            <h2 style="color: #F8FAFC; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">
-                🎙️ NADHAM QA Analytics Platform
-            </h2>
-            <p class="brand-desc">
-                High-Precision Indic Speech Recognition Evaluation & Benchmarking for Gnani Prisma STT
-            </p>
-        </div>
-        <div>
-            <span class="brand-tag">
-                Prisma v2.5 Ready
-            </span>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+if "nav_selection" not in st.session_state:
+    st.session_state["nav_selection"] = "📊 Dashboard"
 
 language_codes = {
     "Malayalam": "ml-IN",
@@ -1871,15 +2175,426 @@ language_codes = {
 }
 
 # -----------------------------------------------------------------------------
-# Configuration & Upload Section
+# Fixed-Style Sidebar Navigation & Branding
 # -----------------------------------------------------------------------------
-tab_eval, tab_compare, tab_benchmark = st.tabs([
-    "🎙️ Single Evaluation",
-    "🔬 Clean vs. Noisy Comparison",
-    "📊 Malayalam Benchmark & Reliability Evidence"
-])
+with st.sidebar:
+    st.markdown("""
+    <div class="sidebar-brand-box">
+        <div class="brand-row">
+            <div class="brand-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="2" x2="12" y2="22" stroke="url(#sbWaveGrad)"></line>
+                    <line x1="8" y1="6" x2="8" y2="18" stroke="url(#sbWaveGrad)"></line>
+                    <line x1="16" y1="6" x2="16" y2="18" stroke="url(#sbWaveGrad)"></line>
+                    <line x1="4" y1="10" x2="4" y2="14" stroke="url(#sbWaveGrad)"></line>
+                    <line x1="20" y1="10" x2="20" y2="14" stroke="url(#sbWaveGrad)"></line>
+                    <defs>
+                        <linearGradient id="sbWaveGrad" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#21B8FF"/>
+                            <stop offset="1" stop-color="#7545FF"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <div class="brand-title-wrap">
+                <span class="brand-title-text">NADHAM <span style="color: #21B8FF;">QA</span></span>
+            </div>
+        </div>
+        <div class="brand-subtitle-text">Speech Intelligence for Malayalam</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-with tab_eval:
+    st.markdown("<div class='sidebar-sep'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='sidebar-nav-label'>NAVIGATION</div>", unsafe_allow_html=True)
+
+    nav_options = [
+        "📊 Dashboard",
+        "🎙️ Single Evaluation",
+        "🔬 Clean vs Noisy",
+        "🧪 Benchmark Lab",
+        "📜 Evaluation History",
+        "📑 Reports & Export",
+        "ℹ️ About"
+    ]
+
+    if st.session_state.get("nav_selection") not in nav_options:
+        st.session_state["nav_selection"] = "📊 Dashboard"
+
+    current_nav_idx = nav_options.index(st.session_state["nav_selection"])
+
+    selected_nav = st.radio(
+        "Navigation Menu",
+        nav_options,
+        index=current_nav_idx,
+        key="nav_selection_radio",
+        label_visibility="collapsed"
+    )
+
+    if selected_nav != st.session_state["nav_selection"]:
+        st.session_state["nav_selection"] = selected_nav
+        st.rerun()
+
+    st.markdown("<div style='min-height: 100px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='sidebar-sep'></div>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="sidebar-bottom-card">
+        <div class="engine-badge">
+            <span class="engine-label">Engine</span>
+            <span class="engine-name">Gnani Prisma v2.5</span>
+        </div>
+        <div class="security-indicator">
+            <span class="sec-dot"></span>
+            <span class="sec-text">Secure API Integration</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# -----------------------------------------------------------------------------
+# Top Header & Product Title
+# -----------------------------------------------------------------------------
+st.title("🎙️ NADHAM QA")
+
+
+# -----------------------------------------------------------------------------
+# VIEW 1: 📊 DASHBOARD (Overview)
+# -----------------------------------------------------------------------------
+if st.session_state["nav_selection"] == "📊 Dashboard":
+    # Kerala-Inspired Dark Navy & Purple Hero Banner
+    st.markdown("""
+    <div class="hero-banner">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="sec-dot"></span>
+                <span>Kerala-First Voice Intelligence</span>
+            </div>
+            <h2 class="hero-title">Welcome to <span class="hero-grad-text">NADHAM QA</span></h2>
+            <p class="hero-subtitle">
+                Evaluate. Analyze. Improve Malayalam Speech Recognition.
+            </p>
+            <div class="hero-meta-row">
+                <div class="meta-item">
+                    <span class="meta-label">Engine:</span>
+                    <span class="meta-val">Gnani Prisma v2.5</span>
+                </div>
+                <div class="meta-divider"></div>
+                <div class="meta-item">
+                    <span class="meta-label">Focus:</span>
+                    <span class="meta-val">Malayalam Orthography</span>
+                </div>
+                <div class="meta-divider"></div>
+                <div class="meta-item">
+                    <span class="meta-label">Metrics:</span>
+                    <span class="meta-val">Wagner-Fischer WER · UAX #29 CER</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-graphic">
+            <svg class="hero-svg" width="340" height="100" viewBox="0 0 340 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="waveGradHero" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#7545FF"/>
+                        <stop offset="50%" stop-color="#21B8FF"/>
+                        <stop offset="100%" stop-color="#28D98A"/>
+                    </linearGradient>
+                    <linearGradient id="backwaterGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#080D20" stop-opacity="0.8"/>
+                        <stop offset="100%" stop-color="#21B8FF" stop-opacity="0.15"/>
+                    </linearGradient>
+                </defs>
+                <path d="M0 65 Q 60 55, 120 65 T 240 65 T 340 65 L 340 100 L 0 100 Z" fill="url(#backwaterGrad)"/>
+                <path d="M0 75 Q 50 65, 100 75 T 200 75 T 300 75 T 340 75 L 340 100 L 0 100 Z" fill="rgba(117,69,255,0.15)"/>
+                <line x1="20" y1="62" x2="20" y2="40" stroke="url(#waveGradHero)" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="40" y1="64" x2="40" y2="28" stroke="url(#waveGradHero)" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="60" y1="62" x2="60" y2="15" stroke="url(#waveGradHero)" stroke-width="3" stroke-linecap="round"/>
+                <line x1="80" y1="65" x2="80" y2="35" stroke="url(#waveGradHero)" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="100" y1="65" x2="100" y2="45" stroke="url(#waveGradHero)" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="120" y1="64" x2="120" y2="22" stroke="url(#waveGradHero)" stroke-width="3" stroke-linecap="round"/>
+                <line x1="140" y1="63" x2="140" y2="10" stroke="url(#waveGradHero)" stroke-width="3.5" stroke-linecap="round"/>
+                <line x1="160" y1="65" x2="160" y2="20" stroke="url(#waveGradHero)" stroke-width="3" stroke-linecap="round"/>
+                <line x1="180" y1="64" x2="180" y2="38" stroke="url(#waveGradHero)" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="200" y1="65" x2="200" y2="12" stroke="url(#waveGradHero)" stroke-width="3.5" stroke-linecap="round"/>
+                <line x1="220" y1="65" x2="220" y2="30" stroke="url(#waveGradHero)" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="240" y1="64" x2="240" y2="20" stroke="url(#waveGradHero)" stroke-width="3" stroke-linecap="round"/>
+                <line x1="260" y1="64" x2="260" y2="45" stroke="url(#waveGradHero)" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="280" y1="65" x2="280" y2="16" stroke="url(#waveGradHero)" stroke-width="3" stroke-linecap="round"/>
+                <line x1="300" y1="64" x2="300" y2="35" stroke="url(#waveGradHero)" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="320" y1="66" x2="320" y2="25" stroke="url(#waveGradHero)" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # -------------------------------------------------------------------------
+    # KPI Metric Cards
+    # -------------------------------------------------------------------------
+    st.markdown("#### 📊 Key Performance Indicators")
+
+    all_wers = []
+    all_cers = []
+    total_crit_matched = 0
+    total_crit_expected = 0
+    samples_evaluated_count = len(st.session_state["eval_history"])
+
+    for item in st.session_state["eval_history"]:
+        if item.get("wer") is not None:
+            all_wers.append(item["wer"])
+        if item.get("cer") is not None:
+            all_cers.append(item["cer"])
+
+    if st.session_state.get("benchmark_results") and "sample_results" in st.session_state["benchmark_results"]:
+        bench = st.session_state["benchmark_results"]
+        for s in bench.get("sample_results", []):
+            if s.get("status") == "SUCCESS":
+                samples_evaluated_count += 1
+                if s.get("wer") is not None:
+                    all_wers.append(s["wer"])
+                if s.get("cer") is not None:
+                    all_cers.append(s["cer"])
+                if s.get("critical_entities"):
+                    total_crit_expected += s["critical_entities"].get("expected", 0)
+                    total_crit_matched += s["critical_entities"].get("matched", 0)
+
+    # 1. Average WER
+    if all_wers:
+        avg_wer_num = sum(all_wers) / len(all_wers)
+        avg_wer_val = f"{avg_wer_num:.2f}%"
+        if avg_wer_num < 15.0:
+            wer_status = ("#28D98A", "rgba(40, 217, 138, 0.15)", "High Precision")
+        elif avg_wer_num < 30.0:
+            wer_status = ("#FFB020", "rgba(255, 176, 32, 0.15)", "Moderate Error")
+        else:
+            wer_status = ("#EF4444", "rgba(239, 68, 68, 0.15)", "High Error Rate")
+    else:
+        avg_wer_val = "N/A"
+        wer_status = ("#94A3B8", "rgba(148, 163, 184, 0.12)", "No Evaluations Yet")
+
+    # 2. Average CER
+    if all_cers:
+        avg_cer_num = sum(all_cers) / len(all_cers)
+        avg_cer_val = f"{avg_cer_num:.2f}%"
+        if avg_cer_num < 10.0:
+            cer_status = ("#28D98A", "rgba(40, 217, 138, 0.15)", "High Grapheme Precision")
+        else:
+            cer_status = ("#FFB020", "rgba(255, 176, 32, 0.15)", "Moderate Grapheme Error")
+    else:
+        avg_cer_val = "N/A"
+        cer_status = ("#94A3B8", "rgba(148, 163, 184, 0.12)", "No Evaluations Yet")
+
+    # 3. Critical Entity Match Rate
+    if total_crit_expected > 0:
+        crit_rate = (total_crit_matched / total_crit_expected) * 100
+        crit_match_rate_val = f"{crit_rate:.1f}%"
+        crit_status = ("#28D98A", "rgba(40, 217, 138, 0.15)", f"{total_crit_matched}/{total_crit_expected} Retained")
+    else:
+        crit_match_rate_val = "N/A"
+        crit_status = ("#94A3B8", "rgba(148, 163, 184, 0.12)", "No Entities Tested")
+
+    # 4. Samples Evaluated
+    samples_val = str(samples_evaluated_count)
+    samples_status = ("#21B8FF", "rgba(33, 184, 255, 0.15)", "Active Session") if samples_evaluated_count > 0 else ("#94A3B8", "rgba(148, 163, 184, 0.12)", "Awaiting Input")
+
+    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+
+    with kpi1:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-top-row">
+                <span class="kpi-label">Average WER</span>
+                <span class="kpi-icon">🎯</span>
+            </div>
+            <div class="kpi-value">{avg_wer_val}</div>
+            <div class="kpi-subtitle">Word Error Rate (Wagner-Fischer)</div>
+            <div class="kpi-status-badge" style="background: {wer_status[1]}; color: {wer_status[0]}; border: 1px solid {wer_status[0]};">
+                ● {wer_status[2]}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with kpi2:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-top-row">
+                <span class="kpi-label">Average CER</span>
+                <span class="kpi-icon">🔤</span>
+            </div>
+            <div class="kpi-value">{avg_cer_val}</div>
+            <div class="kpi-subtitle">UAX #29 Grapheme Clusters</div>
+            <div class="kpi-status-badge" style="background: {cer_status[1]}; color: {cer_status[0]}; border: 1px solid {cer_status[0]};">
+                ● {cer_status[2]}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with kpi3:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-top-row">
+                <span class="kpi-label">Critical Match Rate</span>
+                <span class="kpi-icon">🛡️</span>
+            </div>
+            <div class="kpi-value">{crit_match_rate_val}</div>
+            <div class="kpi-subtitle">7 High-Risk Entity Types</div>
+            <div class="kpi-status-badge" style="background: {crit_status[1]}; color: {crit_status[0]}; border: 1px solid {crit_status[0]};">
+                ● {crit_status[2]}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with kpi4:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-top-row">
+                <span class="kpi-label">Samples Evaluated</span>
+                <span class="kpi-icon">📈</span>
+            </div>
+            <div class="kpi-value">{samples_val}</div>
+            <div class="kpi-subtitle">Total Single & Batch Runs</div>
+            <div class="kpi-status-badge" style="background: {samples_status[1]}; color: {samples_status[0]}; border: 1px solid {samples_status[0]};">
+                ● {samples_status[2]}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+
+    # -------------------------------------------------------------------------
+    # Performance Analytics
+    # -------------------------------------------------------------------------
+    st.markdown("#### 📈 Performance Analytics")
+
+    if all_wers:
+        col_c1, col_c2 = st.columns(2)
+        chart_df = pd.DataFrame({
+            "Evaluation Run": [f"Run {i+1}" for i in range(len(all_wers))],
+            "WER (%)": all_wers,
+            "CER (%)": all_cers if len(all_cers) == len(all_wers) else [0.0]*len(all_wers)
+        }).set_index("Evaluation Run")
+
+        with col_c1:
+            st.markdown("##### 🎯 Word Error Rate (WER) Trend")
+            st.line_chart(chart_df[["WER (%)"]], color="#7545FF")
+
+        with col_c2:
+            st.markdown("##### 🔤 Character Error Rate (CER) Trend")
+            st.line_chart(chart_df[["CER (%)"]], color="#21B8FF")
+    else:
+        st.markdown("""
+        <div class="dashboard-card" style="text-align: center; padding: 36px 20px;">
+            <div style="font-size: 36px; margin-bottom: 10px;">📊</div>
+            <div style="font-size: 17px; font-weight: 700; color: #FFFFFF; margin-bottom: 6px;">No Evaluation Analytics Available Yet</div>
+            <p style="color: #94A3B8; font-size: 13.5px; max-width: 500px; margin: 0 auto;">
+                Analytics charts and progression metrics populate automatically as you evaluate speech samples in Single Evaluation, Clean vs Noisy, or Benchmark Lab.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+
+    # -------------------------------------------------------------------------
+    # Evaluation Modules Quick Access
+    # -------------------------------------------------------------------------
+    st.markdown("#### ⚡ Evaluation Modules")
+
+    col_m1, col_m2 = st.columns(2)
+    with col_m1:
+        st.markdown("""
+        <div class="module-card">
+            <div class="module-num" style="color: #7545FF;">MODULE 01</div>
+            <div class="module-title">🎙️ Single Evaluation</div>
+            <div class="module-desc">
+                Upload audio, provide ground-truth reference text, and evaluate ASR accuracy with Wagner-Fischer WER, grapheme CER, and critical entity detection.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Launch Single Evaluation →", key="btn_dash_single", use_container_width=True):
+            st.session_state["nav_selection"] = "🎙️ Single Evaluation"
+            st.rerun()
+
+    with col_m2:
+        st.markdown("""
+        <div class="module-card">
+            <div class="module-num" style="color: #21B8FF;">MODULE 02</div>
+            <div class="module-title">🔬 Clean vs Noisy</div>
+            <div class="module-desc">
+                Compare paired audio recordings to quantify recognition degradation (ΔWER and ΔCER), acoustic signal degradation, and critical retention.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Launch Clean vs Noisy →", key="btn_dash_compare", use_container_width=True):
+            st.session_state["nav_selection"] = "🔬 Clean vs Noisy"
+            st.rerun()
+
+    col_m3, col_m4 = st.columns(2)
+    with col_m3:
+        st.markdown("""
+        <div class="module-card">
+            <div class="module-num" style="color: #28D98A;">MODULE 03</div>
+            <div class="module-title">🧪 Benchmark Lab</div>
+            <div class="module-desc">
+                Systematic batch evaluation across standardized Malayalam speech recordings, computing exact global error quotients with zero noise fabrication.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Open Benchmark Lab →", key="btn_dash_bench", use_container_width=True):
+            st.session_state["nav_selection"] = "🧪 Benchmark Lab"
+            st.rerun()
+
+    with col_m4:
+        st.markdown("""
+        <div class="module-card">
+            <div class="module-num" style="color: #A855F7;">MODULE 04</div>
+            <div class="module-title">📜 Evaluation History</div>
+            <div class="module-desc">
+                Review historical evaluation logs, examine past transcript alignments, and export structured CSV/TXT verification evidence for auditing.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("View Evaluation History →", key="btn_dash_hist", use_container_width=True):
+            st.session_state["nav_selection"] = "📜 Evaluation History"
+            st.rerun()
+
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+
+    # -------------------------------------------------------------------------
+    # Recent Evaluation Results Table
+    # -------------------------------------------------------------------------
+    st.markdown("#### 📋 Recent Evaluation Results")
+
+    if st.session_state["eval_history"]:
+        hist_rows = []
+        for i, h in enumerate(reversed(st.session_state["eval_history"])):
+            ts = h.get("timestamp", datetime.now())
+            ts_str = ts.strftime("%Y-%m-%d %H:%M:%S") if isinstance(ts, datetime) else str(ts)
+            hist_rows.append({
+                "Date & Time": ts_str,
+                "Module": h.get("module", "Single Evaluation"),
+                "Language": h.get("language", "Malayalam"),
+                "Ref Words": h.get("ref_words", 0),
+                "WER (%)": f"{h.get('wer', 0.0):.2f}%",
+                "CER (%)": f"{h.get('cer', 0.0):.2f}%" if h.get("cer") is not None else "—",
+                "Status": "COMPLETED"
+            })
+        st.dataframe(pd.DataFrame(hist_rows), use_container_width=True)
+    else:
+        st.markdown("""
+        <div class="dashboard-card" style="text-align: center; padding: 32px 20px;">
+            <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
+            <div style="font-size: 16px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px;">No Evaluation History in Current Session</div>
+            <p style="color: #94A3B8; font-size: 13px; margin: 0 auto; max-width: 480px;">
+                Completed single evaluations and benchmark runs will automatically appear here with full diagnostic metrics.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+# -----------------------------------------------------------------------------
+# VIEW 2: 🎙️ SINGLE EVALUATION
+# -----------------------------------------------------------------------------
+elif st.session_state["nav_selection"] == "🎙️ Single Evaluation":
+    st.markdown("### 🎙️ Single Audio Evaluation")
+    st.caption("Benchmark ASR transcription accuracy, character-level grapheme edits, and domain-critical entities with Gnani Prisma STT.")
+
     col_left, col_right = st.columns([1, 1], gap="medium")
 
     with col_left:
@@ -1913,9 +2628,7 @@ with tab_eval:
         )
         st.caption("ℹ️ Punctuation, currency symbols, and zero-width characters will be canonically normalized.")
 
-    # -----------------------------------------------------------------------------
     # System Status Indicators
-    # -----------------------------------------------------------------------------
     st.markdown("#### ⚙️ System Status")
     stat1, stat2, stat3 = st.columns(3)
 
@@ -1936,15 +2649,15 @@ with tab_eval:
         """, unsafe_allow_html=True)
 
     with stat3:
-        current_status = st.session_state.get("api_status", "Ready (Unverified Live)")
-        if "Verified" in current_status:
-            badge_style = "color: #34D399;"
+        current_status = st.session_state.get("api_status", "Ready (Dual-Source Secure)")
+        if "Verified" in current_status or "Online" in current_status:
+            badge_style = "color: #28D98A;"
             dot = "●"
         elif "504" in current_status or "Latency" in current_status:
-            badge_style = "color: #F87171;"
+            badge_style = "color: #EF4444;"
             dot = "▲"
         else:
-            badge_style = "color: #38BDF8;"
+            badge_style = "color: #21B8FF;"
             dot = "●"
 
         st.markdown(f"""
@@ -1954,58 +2667,43 @@ with tab_eval:
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-    # -----------------------------------------------------------------------------
-    # Action Button: Run Evaluation
-    # (Must be the primary button on the page for AppTest compatibility)
-    # -----------------------------------------------------------------------------
     run_clicked = st.button("🚀 Run NADHAM QA Test", type="primary", use_container_width=True)
 
     if run_clicked:
-        # Clear previous run results to avoid stale displays on new run or error
         for key in ["transcript", "reference", "request_id", "language", "audio_name"]:
             st.session_state.pop(key, None)
 
         if audio is None:
             st.error("Please upload an audio file.")
-
         elif len(audio.getvalue()) == 0:
             st.error("The uploaded audio file is empty (0 bytes). Please upload a valid audio recording.")
-
         elif len(audio.getvalue()) > MAX_AUDIO_BYTES:
             st.error(f"Audio file exceeds the maximum allowed size of {MAX_AUDIO_BYTES // (1024 * 1024)} MB.")
-
         elif not reference.strip():
             st.error("Please enter the reference transcript.")
-
         elif not words(reference):
             st.error("Reference transcript contains only punctuation or no valid words. Please enter meaningful text.")
-
         else:
             try:
                 with st.spinner("Gnani Prisma is analysing your speech..."):
-                    result = call_gnani(
-                        audio,
-                        language_codes[language]
-                    )
+                    result = call_gnani(audio, language_codes[language])
 
                 transcript = result.get("transcript", "")
-
                 st.session_state["transcript"] = transcript
                 st.session_state["reference"] = reference
-                st.session_state["request_id"] = result.get(
-                    "request_id", "Not available"
-                )
+                st.session_state["request_id"] = result.get("request_id", "Not available")
                 st.session_state["language"] = language
                 st.session_state["audio_name"] = audio.name
                 st.session_state["api_status"] = "Online (Verified 200)"
 
-                # Pre-compute metrics to record history
                 computed_metrics = evaluate(reference, transcript)
                 cer_metrics = evaluate_cer(reference, transcript)
                 if computed_metrics:
                     st.session_state["eval_history"].append({
+                        "module": "Single Evaluation",
+                        "audio_name": audio.name,
                         "wer": computed_metrics["wer"],
                         "cer": cer_metrics["cer"] if cer_metrics else None,
                         "errors": computed_metrics["errors"],
@@ -2020,6 +2718,11 @@ with tab_eval:
                         "timestamp": datetime.now()
                     })
 
+                if audio.name.lower().endswith(".wav"):
+                    st.session_state["audio_quality"] = analyze_audio_quality(audio.getvalue())
+                else:
+                    st.session_state["audio_quality"] = {"supported": False, "message": "Acoustic signal metrics currently support standard PCM WAV formats."}
+
             except Exception as error:
                 err_str = str(error)
                 if "504" in err_str or "gateway" in err_str.lower():
@@ -2028,320 +2731,155 @@ with tab_eval:
                     st.session_state["api_status"] = "API Error"
                 st.error(f"Test failed: {error}")
 
+    # Display Single Evaluation Results
+    if st.session_state.get("transcript") is not None and st.session_state.get("reference") is not None:
+        ref_text = st.session_state["reference"]
+        hyp_text = st.session_state["transcript"]
+        metrics = evaluate(ref_text, hyp_text)
+        cer_metrics = evaluate_cer(ref_text, hyp_text)
+        crit_results = compare_critical_entities(ref_text, hyp_text)
 
-    # -----------------------------------------------------------------------------
-    # Session Aggregate Metric Cards
-    # (Supported strictly by actual session evaluation data)
-    # -----------------------------------------------------------------------------
-    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-    st.markdown("#### 📊 Session Performance Overview")
+        st.markdown("---")
+        st.markdown("### 📊 Evaluation Diagnostics & Metrics")
 
-    total_evals = len(st.session_state["eval_history"])
-    if total_evals > 0:
-        latest_item = st.session_state["eval_history"][-1]
-        latest_wer_val = f"{latest_item['wer']:.2f}%"
-        latest_cer_val = f"{latest_item['cer']:.2f}%" if latest_item.get("cer") is not None else "—"
-        avg_wer_val = f"{sum(e['wer'] for e in st.session_state['eval_history']) / total_evals:.2f}%"
-        total_evals_val = str(total_evals)
-    else:
-        latest_wer_val = "—"
-        latest_cer_val = "—"
-        avg_wer_val = "—"
-        total_evals_val = "0"
-
-    m_col1, m_col2, m_col3, m_col4 = st.columns(4)
-    m_col1.metric("Latest WER", latest_wer_val, help="Word Error Rate of the most recent evaluation in this session.")
-    m_col2.metric("Latest CER", latest_cer_val, help="Character Error Rate (Unicode grapheme clusters) of the most recent evaluation.")
-    m_col3.metric("Average WER", avg_wer_val, help="Cumulative average WER across all runs in current session.")
-    m_col4.metric("Total Evaluations", total_evals_val, help="Number of successful evaluations completed in this session.")
-
-    st.divider()
-
-    # -----------------------------------------------------------------------------
-    # Evaluation Results Section
-    # -----------------------------------------------------------------------------
-    if "transcript" in st.session_state:
-
-        st.header("📊 Evaluation Results")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown("**Reference Transcript**")
-            st.info(st.session_state["reference"])
-
-        with col2:
-            st.markdown("**Gnani Prisma Transcript**")
-            st.success(st.session_state["transcript"])
-
-        metrics = evaluate(
-            st.session_state["reference"],
-            st.session_state["transcript"]
-        )
-        cer_metrics = evaluate_cer(
-            st.session_state["reference"],
-            st.session_state["transcript"]
-        )
-
-        if metrics:
-
-            st.markdown("### Accuracy Metrics")
-
-            c1, c2, c3, c4 = st.columns(4)
-
-            c1.metric(
-                "Word Error Rate (WER)",
-                f"{metrics['wer']:.2f}%",
-                help="Word-level error rate: (Substitutions + Deletions + Insertions) / Reference Words * 100"
-            )
-
-            c2.metric(
-                "Character Error Rate (CER)",
-                f"{cer_metrics['cer']:.2f}%" if cer_metrics else "N/A",
-                help="Character-level error rate: (Substitutions + Deletions + Insertions) / Reference Graphemes * 100"
-            )
-
-            c3.metric(
-                "Word Errors",
-                f"{metrics['errors']} / {metrics['reference_words']}",
-                help="Total word errors vs reference word count"
-            )
-
-            c4.metric(
-                "Character Errors",
-                f"{cer_metrics['errors']} / {cer_metrics['reference_chars']}" if cer_metrics else "N/A",
-                help="Total character edit errors vs reference grapheme cluster count"
-            )
-
-            st.caption(
-                "ℹ️ **Linguistic Note:** WER evaluates complete word tokens. CER evaluates Unicode UAX #29 grapheme clusters "
-                "(base consonants with attached matras, viramas, and chillus; whitespace excluded), providing fine-grained accuracy "
-                "for agglutinative Indic languages. Metrics are calculated strictly against the supplied reference transcript."
-            )
-
-            # Operations Breakdown Indicators
-            correct_count = sum(1 for op in metrics["operations"] if op[0] == "Correct")
-            sub_count = sum(1 for op in metrics["operations"] if op[0] == "Substitution")
-            del_count = sum(1 for op in metrics["operations"] if op[0] == "Deletion")
-            ins_count = sum(1 for op in metrics["operations"] if op[0] == "Insertion")
-
-            st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-            pill_col1, pill_col2, pill_col3, pill_col4 = st.columns(4)
-            with pill_col1:
-                st.markdown(f"<div class='pill-correct'>🟢 Correct: <b>{correct_count}</b></div>", unsafe_allow_html=True)
-            with pill_col2:
-                st.markdown(f"<div class='pill-sub'>🟠 Substitutions: <b>{sub_count}</b></div>", unsafe_allow_html=True)
-            with pill_col3:
-                st.markdown(f"<div class='pill-del'>🔴 Deletions: <b>{del_count}</b></div>", unsafe_allow_html=True)
-            with pill_col4:
-                st.markdown(f"<div class='pill-ins'>🟣 Insertions: <b>{ins_count}</b></div>", unsafe_allow_html=True)
-            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-
-            st.markdown("### Word-Level Error Analysis")
-
-            rows = []
-            for status, reference_word, predicted_word in metrics["operations"]:
-                rows.append({
-                    "Status": status,
-                    "Reference Word": reference_word,
-                    "Recognized Word": predicted_word
-                })
-
-            st.dataframe(rows, use_container_width=True)
-
-            st.caption(
-                "Correct = matched | Substitution = incorrect word | "
-                "Deletion = missing word | Insertion = extra word"
-            )
-
-            # ---------------------------------------------------------------------
-            # Critical Information Analysis (Rule-Based)
-            # ---------------------------------------------------------------------
-            crit_results = compare_critical_entities(
-                st.session_state["reference"],
-                st.session_state["transcript"]
-            )
-
-            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-            st.markdown("### 🎯 Critical Information Analysis")
-            st.caption(
-                "Rule-based detection of mission-critical domain entities: Currency, Dates, Times, "
-                "Phone Numbers, Numbers, Negations, and Named Entities. Requires human verification for edge-case contexts."
-            )
-
-            crit_c1, crit_c2, crit_c3, crit_c4, crit_c5 = st.columns(5)
-            crit_c1.metric("Critical Entities", crit_results["total_items"])
-            crit_c2.metric("Exact Matches", crit_results["matching_items"])
-            crit_c3.metric("Changed Values", crit_results["changed_items"])
-            crit_c4.metric("Missing Entities", crit_results["missing_items"])
-            crit_c5.metric("Extra (Spurious)", crit_results["extra_items"])
-
-            if crit_results["details"]:
-                st.dataframe(crit_results["details"], use_container_width=True)
-            else:
-                st.info("No critical entities (numbers, dates, currency, phone numbers, negation) detected in reference or hypothesis.")
-
-            # Word-level text table for the TXT report
-            table_lines = [
-                f"{'#':<4} | {'Status':<14} | {'Reference Word':<25} | {'Recognized Word':<25}",
-                "-" * 75
-            ]
-            for idx, (status, ref_w, hyp_w) in enumerate(metrics["operations"], start=1):
-                table_lines.append(
-                    f"{idx:<4} | {status:<14} | {ref_w:<25} | {hyp_w:<25}"
-                )
-            ops_table_text = "\n".join(table_lines)
-
-            crit_table_lines = [
-                f"{'Category':<15} | {'Status':<10} | {'Reference Value':<22} | {'Recognized Value':<22} | {'Explanation'}",
-                "-" * 95
-            ]
-            for row in crit_results["details"]:
-                crit_table_lines.append(
-                    f"{row['Category']:<15} | {row['Status']:<10} | {row['Reference Value']:<22} | {row['Recognized Value']:<22} | {row['Explanation']}"
-                )
-            crit_table_text = "\n".join(crit_table_lines) if crit_results["details"] else "No critical entities detected."
-
-            timestamp_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            audio_name = st.session_state.get("audio_name", "audio_recording")
-
-            cer_block = ""
+        m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+        with m_col1:
+            st.metric("Word Error Rate (WER)", f"{metrics['wer']:.2f}%", help="Lower is better. 0% represents a perfect word-level match.")
+        with m_col2:
             if cer_metrics:
-                cer_block = f"""
-    Character Error Rate (CER):   {cer_metrics['cer']:.2f}%
-    Total Character Errors:       {cer_metrics['errors']}
-    Reference Grapheme Count:     {cer_metrics['reference_chars']}
-    Recognized Grapheme Count:    {cer_metrics['recognized_chars']}
-    Character Substitutions:      {cer_metrics['substitutions']}
-    Character Deletions:          {cer_metrics['deletions']}
-    Character Insertions:         {cer_metrics['insertions']}
-    (CER Formula: [Char Substitutions + Deletions + Insertions] / Reference Grapheme Count * 100)
-    (CER Policy: Unicode UAX #29 grapheme clusters; whitespace excluded to isolate acoustic transcription accuracy)
-    """
+                st.metric("Character Error Rate (CER)", f"{cer_metrics['cer']:.2f}%", help="Character-level edit distance evaluated over Unicode UAX #29 extended grapheme clusters.")
+            else:
+                st.metric("Character Error Rate (CER)", "N/A")
+        with m_col3:
+            crit_rate = crit_results["match_rate"]
+            st.metric("Critical Entity Match", f"{crit_rate:.1f}%", help="Retention of high-stakes entities: numbers, dates, times, currencies, phone numbers, negations, and names.")
+        with m_col4:
+            st.metric("Total Word Errors", f"{metrics['errors']}", help="Sum of word substitutions, deletions, and insertions.")
 
-            aq = st.session_state.get("audio_quality")
-            audio_quality_block = ""
-            if aq and aq.get("supported"):
-                audio_quality_block = f"""
-ACOUSTIC SIGNAL QUALITY:
---------------------------------------------------------------------------------
-Duration:                     {aq['duration_s']}s
-Sample Rate:                  {aq['sample_rate']} Hz
-Channels:                     {aq['channels_desc']} ({aq['channels']} ch)
-RMS Energy:                   {aq['rms_dbfs']} dBFS
-Peak Amplitude:               {aq['peak_dbfs']} dBFS
-Clipping Percentage:          {aq['clipping_pct']}%
-Silence Percentage:           {aq['silence_pct']}%
-"""
-            st.session_state['audio_quality_report_block'] = audio_quality_block
+        aq = st.session_state.get("audio_quality")
+        if aq and aq.get("supported"):
+            st.markdown("#### 🎧 Local Acoustic Signal Metrics")
+            aq_c1, aq_c2, aq_c3, aq_c4 = st.columns(4)
+            with aq_c1:
+                st.metric("Duration / Rate", f"{aq['duration_s']:.2f}s", f"{aq['sample_rate']} Hz")
+            with aq_c2:
+                st.metric("Peak Amplitude", f"{aq['peak_dbfs']:.1f} dBFS")
+            with aq_c3:
+                st.metric("RMS Level", f"{aq['rms_dbfs']:.1f} dBFS")
+            with aq_c4:
+                st.metric("Clipping / Silence", f"{aq['clipping_pct']:.1f}% clip", f"{aq['silence_pct']:.1f}% silent")
 
-            crit_block = f"""
-    CRITICAL INFORMATION ANALYSIS (RULE-BASED):
-    --------------------------------------------------------------------------------
-    Reference Critical Items:     {crit_results['total_items']}
-    Matching Items:               {crit_results['matching_items']}
-    Changed Items:                {crit_results['changed_items']}
-    Missing Items:                {crit_results['missing_items']}
-    Extra (Spurious) Items:       {crit_results['extra_items']}
-    Critical Entity Accuracy:     {crit_results['accuracy']:.2f}%
+        # ---------------------------------------------------------------------
+        # Transcript Comparison UI
+        # ---------------------------------------------------------------------
+        st.markdown("#### 📝 Comparative Transcripts")
 
-    {crit_table_text}
-    (Note: Rule-based heuristic extraction for domain verification; verify edge-case names manually)
-    """
+        t_col1, t_col2 = st.columns(2)
+        with t_col1:
+            st.markdown(f"""
+            <div class="dashboard-card" style="min-height: 140px;">
+                <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin-bottom: 8px;">Ground Truth Reference</div>
+                <div style="color: #FFFFFF; font-size: 16px; line-height: 1.8; font-family: 'Noto Sans Malayalam', sans-serif;">
+                    {ref_text}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-            report = f"""================================================================================
-    NADHAM QA - SPEECH RECOGNITION EVALUATION REPORT
-    ================================================================================
-    Timestamp:          {timestamp_str}
-    Audio File:         {audio_name}
-    Language:           {st.session_state['language']}
-    Gnani Request ID:   {st.session_state['request_id']}
-    Model:              Gnani Prisma v2.5
+        with t_col2:
+            req_id_str = st.session_state.get("request_id", "N/A")
+            st.markdown(f"""
+            <div class="dashboard-card" style="min-height: 140px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 11px; font-weight: 700; color: #21B8FF; text-transform: uppercase;">Gnani Prisma Recognized</span>
+                    <span style="font-size: 10px; color: #64748B;">Req ID: {str(req_id_str)[:12]}</span>
+                </div>
+                <div style="color: #FFFFFF; font-size: 16px; line-height: 1.8; font-family: 'Noto Sans Malayalam', sans-serif;">
+                    {hyp_text}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-    ACCURACY METRICS:
-    --------------------------------------------------------------------------------
-    Word Error Rate:        {metrics['wer']:.2f}%
-    Total Word Errors:      {metrics['errors']}
-    Reference Word Count:   {metrics['reference_words']}
-    Recognized Word Count:  {metrics['recognized_words']}
-    {cer_block}
-    {crit_block}
-    TRANSCRIPTS:
-    --------------------------------------------------------------------------------
-    Reference Transcript:
-    {st.session_state['reference']}
+        # Word-Level Error Highlight Visualization
+        st.markdown("#### 🔍 Word-Level Alignment & Highlight")
+        highlight_tokens = []
+        for op in metrics["operations"]:
+            tag = op[0]
+            ref_w = op[1]
+            hyp_w = op[2]
+            if tag == "Correct":
+                highlight_tokens.append(f'<span class="tok-correct">{ref_w}</span>')
+            elif tag == "Substitution":
+                highlight_tokens.append(f'<span class="tok-sub">{ref_w} ➔ {hyp_w}</span>')
+            elif tag == "Deletion":
+                highlight_tokens.append(f'<span class="tok-del">{ref_w}</span>')
+            elif tag == "Insertion":
+                highlight_tokens.append(f'<span class="tok-ins">+{hyp_w}</span>')
 
-    Gnani Transcript:
-    {st.session_state['transcript']}
+        st.markdown(f"""
+        <div class="dashboard-card" style="line-height: 2.2;">
+            {' '.join(highlight_tokens)}
+        </div>
+        """, unsafe_allow_html=True)
 
-    WORD-LEVEL ERROR BREAKDOWN:
-    --------------------------------------------------------------------------------
-    {ops_table_text}
-    ================================================================================
-    Generated by NADHAM QA Platform | Kerala-first. India-ready.
-    """
+        # Critical Entities Comparison Table
+        st.markdown("#### 🛡️ Critical Information Detection & Entity Alignment")
+        if crit_results["details"]:
+            df_crit = pd.DataFrame(crit_results["details"])
+            st.dataframe(df_crit, use_container_width=True)
+        else:
+            st.info("No domain-critical entities (numbers, dates, times, currencies, phone numbers, negations, or names) detected in the reference text.")
 
-            # Generate CSV export
-            df_export = pd.DataFrame(rows)
-            csv_data = df_export.to_csv(index=False).encode("utf-8")
+        # Download Reports
+        st.markdown("#### 📥 Diagnostic Reports & Export")
+        audio_name = st.session_state.get("audio_name", "recording")
+        report_txt = (
+            "NADHAM QA - SPEECH RECOGNITION TEST REPORT\n"
+            f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"Audio: {audio_name}\n"
+            f"Language: {st.session_state.get('language', 'Malayalam')}\n"
+            f"WER: {metrics['wer']:.2f}%\n"
+            f"CER: {cer_metrics['cer'] if cer_metrics else 'N/A'}%\n"
+            f"Critical Match Rate: {crit_results['match_rate']:.1f}%\n\n"
+            "Reference Transcript:\n"
+            f"{ref_text}\n\n"
+            "Recognized Transcript:\n"
+            f"{hyp_text}\n"
+        )
+        dl_c1, dl_c2 = st.columns(2)
+        with dl_c1:
+            st.download_button(
+                "📥 Download Test Report (.txt)",
+                report_txt,
+                file_name=f"NADHAM_QA_Report_{audio_name}.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
+        with dl_c2:
+            rows = [{"Operation": op[0], "Reference Word": op[1], "Recognized Word": op[2]} for op in metrics["operations"]]
+            df_ops = pd.DataFrame(rows)
+            st.download_button(
+                "📊 Download Error Analysis (.csv)",
+                df_ops.to_csv(index=False).encode("utf-8"),
+                file_name=f"NADHAM_QA_Analysis_{audio_name}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
 
-            # Generate Critical Entities CSV export
-            df_crit_export = pd.DataFrame(crit_results["details"]) if crit_results["details"] else pd.DataFrame(columns=["Category", "Reference Value", "Recognized Value", "Status", "Explanation"])
-            csv_crit_data = df_crit_export.to_csv(index=False).encode("utf-8")
 
-            st.markdown("### 📥 Diagnostic Reports & Export")
-            col_d1, col_d2, col_d3 = st.columns(3)
-
-            with col_d1:
-                st.download_button(
-                    "📥 Download Test Report (.txt)",
-                    report,
-                    file_name=f"NADHAM_QA_Report_{audio_name}.txt",
-                    mime="text/plain",
-                    use_container_width=True
-                )
-
-            with col_d2:
-                st.download_button(
-                    "📊 Download Error Analysis (.csv)",
-                    csv_data,
-                    file_name=f"NADHAM_QA_Analysis_{audio_name}.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
-
-            with col_d3:
-                st.download_button(
-                    "🎯 Download Critical Entities (.csv)",
-                    csv_crit_data,
-                    file_name=f"NADHAM_QA_Critical_{audio_name}.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
-
-    # -----------------------------------------------------------------------------
-    # About NADHAM QA Section (Expandable)
-    # -----------------------------------------------------------------------------
-
-with tab_compare:
+# -----------------------------------------------------------------------------
+# VIEW 3: 🔬 CLEAN VS NOISY COMPARISON
+# -----------------------------------------------------------------------------
+elif st.session_state["nav_selection"] == "🔬 Clean vs Noisy":
     st.markdown("### 🔬 Clean vs. Noisy Speech Recognition Benchmark")
-    st.caption(
-        "Evaluate speech recognition degradation, character-level sensitivity, critical entity retention, "
-        "and acoustic signal properties under background noise conditions."
-    )
+    st.caption("Quantify speech recognition degradation, character-level sensitivity, critical entity retention, and acoustic signal properties under ambient noise.")
 
-    st.warning(
-        "⚠️ **Credit & API Notice:** Clean vs. Noisy comparison evaluates two recordings against a shared "
-        "reference transcript. This initiates two independent requests to Gnani Prisma STT and consumes "
-        "2 API transactions. Analysis begins strictly when you click the comparison button below."
-    )
+    st.warning("⚠️ **Credit & API Notice:** Clean vs. Noisy comparison evaluates two recordings against a shared reference transcript. This initiates two independent requests to Gnani Prisma STT and consumes 2 API transactions. Analysis begins strictly when you click the comparison button below.")
 
     comp_language = st.selectbox(
         "Select recording language",
         ["Malayalam", "English", "Hindi"],
         index=0,
-        key="comp_lang_select",
-        help="Target language for clean and noisy transcription."
+        key="comp_lang_select"
     )
 
     col_clean, col_noisy = st.columns(2, gap="medium")
@@ -2351,459 +2889,391 @@ with tab_compare:
         clean_audio = st.file_uploader(
             "Upload clean recording",
             type=["wav", "mp3", "ogg", "flac", "aac", "m4a"],
-            key="clean_audio_input",
-            help="High-quality recording with minimal background noise."
+            key="clean_audio_input"
         )
-        clean_q = None
         if clean_audio is not None:
             st.audio(clean_audio)
             st.caption(f"📁 `{clean_audio.name}` ({len(clean_audio.getvalue()) / 1024:.1f} KB)")
-            clean_q = analyze_audio_quality(clean_audio.getvalue(), filename=clean_audio.name)
-            if clean_q["supported"]:
-                st.markdown(f"""
-                <div class="audio-card">
-                    <div style="font-size: 12px; font-weight: 600; color: #34D399; margin-bottom: 6px;">
-                        🔊 Clean Acoustic Signal ({clean_q['channels_desc']}, {clean_q['sample_rate']} Hz)
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: #94A3B8;">
-                        <div>⏱️ Duration: <b style="color: #F8FAFC;">{clean_q['duration_s']}s</b></div>
-                        <div>📊 RMS Energy: <b style="color: #F8FAFC;">{clean_q['rms_dbfs']} dBFS</b></div>
-                        <div>⚡ Peak Level: <b style="color: #F8FAFC;">{clean_q['peak_dbfs']} dBFS</b></div>
-                        <div>🔇 Silence: <b style="color: #F8FAFC;">{clean_q['silence_pct']}%</b></div>
-                        <div>⚠️ Clipping: <b style="color: {'#F87171' if clean_q['clipping_pct'] > 0 else '#34D399'};">{clean_q['clipping_pct']}%</b></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.caption(f"ℹ️ {clean_q['error']}")
 
     with col_noisy:
         st.markdown("#### 🔴 Noisy Audio Recording")
         noisy_audio = st.file_uploader(
             "Upload noisy recording",
             type=["wav", "mp3", "ogg", "flac", "aac", "m4a"],
-            key="noisy_audio_input",
-            help="Same speech recorded with background noise, babble, or reverberation."
+            key="noisy_audio_input"
         )
-        noisy_q = None
         if noisy_audio is not None:
             st.audio(noisy_audio)
             st.caption(f"📁 `{noisy_audio.name}` ({len(noisy_audio.getvalue()) / 1024:.1f} KB)")
-            noisy_q = analyze_audio_quality(noisy_audio.getvalue(), filename=noisy_audio.name)
-            if noisy_q["supported"]:
-                st.markdown(f"""
-                <div class="audio-card">
-                    <div style="font-size: 12px; font-weight: 600; color: #F87171; margin-bottom: 6px;">
-                        🔊 Noisy Acoustic Signal ({noisy_q['channels_desc']}, {noisy_q['sample_rate']} Hz)
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: #94A3B8;">
-                        <div>⏱️ Duration: <b style="color: #F8FAFC;">{noisy_q['duration_s']}s</b></div>
-                        <div>📊 RMS Energy: <b style="color: #F8FAFC;">{noisy_q['rms_dbfs']} dBFS</b></div>
-                        <div>⚡ Peak Level: <b style="color: #F8FAFC;">{noisy_q['peak_dbfs']} dBFS</b></div>
-                        <div>🔇 Silence: <b style="color: #F8FAFC;">{noisy_q['silence_pct']}%</b></div>
-                        <div>⚠️ Clipping: <b style="color: {'#F87171' if noisy_q['clipping_pct'] > 0 else '#34D399'};">{noisy_q['clipping_pct']}%</b></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.caption(f"ℹ️ {noisy_q['error']}")
 
-    st.markdown("#### 📝 Shared Ground Truth Reference")
     comp_reference = st.text_area(
         "Ground truth reference transcript",
-        placeholder="Enter the exact spoken reference common to both recordings...",
-        height=100,
-        key="comp_reference_input",
-        help="Ground-truth reference against which both clean and noisy transcripts are evaluated."
+        placeholder="Enter exactly what was spoken in both recordings...",
+        height=120,
+        key="comp_ref_text"
     )
 
-    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-    run_compare_clicked = st.button("🔬 Run Clean vs Noisy Comparison", type="secondary", use_container_width=True, key="run_compare_button")
+    run_compare_clicked = st.button("🔬 Run Clean vs Noisy Comparison", type="primary", use_container_width=True)
 
     if run_compare_clicked:
-        # Clear previous comparison results to prevent stale displays on error or new run
-        st.session_state["compare_results"] = None
-
-        if clean_audio is None:
-            st.error("Please upload the clean audio recording.")
-        elif noisy_audio is None:
-            st.error("Please upload the noisy audio recording.")
-        elif len(clean_audio.getvalue()) == 0:
-            st.error("The clean audio file is empty (0 bytes). Please upload a valid recording.")
-        elif len(noisy_audio.getvalue()) == 0:
-            st.error("The noisy audio file is empty (0 bytes). Please upload a valid recording.")
-        elif len(clean_audio.getvalue()) > MAX_AUDIO_BYTES:
-            st.error(f"Clean audio file exceeds {MAX_AUDIO_BYTES // (1024*1024)} MB limit.")
-        elif len(noisy_audio.getvalue()) > MAX_AUDIO_BYTES:
-            st.error(f"Noisy audio file exceeds {MAX_AUDIO_BYTES // (1024*1024)} MB limit.")
-        elif not comp_reference.strip():
-            st.error("Please enter the shared reference transcript.")
-        elif not words(comp_reference):
-            st.error("Reference transcript contains only punctuation or no valid words. Please enter meaningful text.")
+        if clean_audio is None or noisy_audio is None:
+            st.error("Please upload both Clean and Noisy audio recordings.")
+        elif len(clean_audio.getvalue()) == 0 or len(noisy_audio.getvalue()) == 0:
+            st.error("One of the uploaded audio files is empty (0 bytes).")
+        elif len(clean_audio.getvalue()) > MAX_AUDIO_BYTES or len(noisy_audio.getvalue()) > MAX_AUDIO_BYTES:
+            st.error(f"One of the audio files exceeds the {MAX_AUDIO_BYTES // (1024 * 1024)} MB limit.")
+        elif not comp_reference.strip() or not words(comp_reference):
+            st.error("Please enter a valid reference transcript with meaningful words.")
         else:
             try:
-                with st.spinner("Transcribing clean recording with Gnani Prisma..."):
+                with st.spinner("Transcribing Clean and Noisy recordings with Gnani Prisma STT..."):
                     clean_res = call_gnani(clean_audio, language_codes[comp_language])
-                with st.spinner("Transcribing noisy recording with Gnani Prisma..."):
                     noisy_res = call_gnani(noisy_audio, language_codes[comp_language])
 
-                clean_trans = clean_res.get("transcript", "")
-                noisy_trans = noisy_res.get("transcript", "")
-                c_q = analyze_audio_quality(clean_audio.getvalue(), filename=clean_audio.name)
-                n_q = analyze_audio_quality(noisy_audio.getvalue(), filename=noisy_audio.name)
+                clean_text = clean_res.get("transcript", "")
+                noisy_text = noisy_res.get("transcript", "")
 
-                comp_data = compare_clean_noisy(
-                    comp_reference,
-                    clean_trans,
-                    noisy_trans,
-                    c_q,
-                    n_q
+                clean_q = analyze_audio_quality(clean_audio.getvalue()) if clean_audio.name.lower().endswith(".wav") else {"supported": False, "message": "MP3/other format"}
+                noisy_q = analyze_audio_quality(noisy_audio.getvalue()) if noisy_audio.name.lower().endswith(".wav") else {"supported": False, "message": "MP3/other format"}
+
+                comparison = compare_clean_noisy(
+                    reference=comp_reference,
+                    clean_transcript=clean_text,
+                    noisy_transcript=noisy_text,
+                    clean_quality=clean_q,
+                    noisy_quality=noisy_q,
+                    clean_audio_name=clean_audio.name,
+                    noisy_audio_name=noisy_audio.name
                 )
-                comp_data["clean_transcript"] = clean_trans
-                comp_data["noisy_transcript"] = noisy_trans
 
-                st.session_state["compare_results"] = {
-                    "clean_audio_name": clean_audio.name,
-                    "noisy_audio_name": noisy_audio.name,
-                    "clean_transcript": clean_trans,
-                    "noisy_transcript": noisy_trans,
-                    "clean_request_id": clean_res.get("request_id", "Not available"),
-                    "noisy_request_id": noisy_res.get("request_id", "Not available"),
-                    "reference": comp_reference,
+                st.session_state["compare_results"] = comparison
+                st.session_state["eval_history"].append({
+                    "module": "Clean vs Noisy",
+                    "wer": comparison["clean"]["wer"],
+                    "cer": comparison["clean"]["cer"],
+                    "noisy_wer": comparison["noisy"]["wer"],
+                    "noisy_cer": comparison["noisy"]["cer"],
+                    "ref_words": comparison["clean"]["ref_words"],
                     "language": comp_language,
-                    "clean_quality": c_q,
-                    "noisy_quality": n_q,
-                    "comparison": comp_data
-                }
+                    "timestamp": datetime.now()
+                })
             except Exception as e:
-                st.error(f"Comparison benchmark failed: {e}")
+                st.error(f"Comparison test failed: {e}")
 
-    # Display comparison results if available
-    comp_state = st.session_state.get("compare_results")
-    if comp_state:
-        cmp = comp_state["comparison"]
-        st.divider()
-        st.markdown("### 📊 Benchmark Comparison Results")
+    # Display Comparison Results
+    comp = st.session_state.get("compare_results")
+    if comp:
+        st.markdown("---")
+        st.markdown("### 📊 Clean vs. Noisy Degradation Analysis")
 
-        # Interpretation banner
-        if cmp["better_recording"] == "clean":
-            st.success(f"🟢 **{cmp['interpretation']}**")
-        elif cmp["better_recording"] == "noisy":
-            st.info(f"🔵 **{cmp['interpretation']}**")
-        else:
-            st.info(f"⚪ **{cmp['interpretation']}**")
+        c_m1, c_m2, c_m3, c_m4 = st.columns(4)
+        with c_m1:
+            st.metric("Clean WER", f"{comp['clean']['wer']:.2f}%")
+        with c_m2:
+            st.metric("Noisy WER", f"{comp['noisy']['wer']:.2f}%")
+        with c_m3:
+            d_wer = comp["degradation"]["delta_wer"]
+            st.metric("ΔWER (Degradation)", f"{d_wer:+.2f}%", delta_color="inverse")
+        with c_m4:
+            st.metric("Comparison Outcome", comp["degradation"]["outcome"])
 
-        # Top 4 Metric Comparison Cards
-        top1, top2, top3, top4 = st.columns(4)
-        top1.metric(
-            "Word Error Rate (WER)",
-            f"{cmp['clean_wer']:.2f}% vs {cmp['noisy_wer']:.2f}%",
-            delta=f"{cmp['delta_wer']:+.2f}%",
-            delta_color="inverse"
-        )
-        top2.metric(
-            "Character Error Rate (CER)",
-            f"{cmp['clean_cer']:.2f}% vs {cmp['noisy_cer']:.2f}%",
-            delta=f"{cmp['delta_cer']:+.2f}%",
-            delta_color="inverse"
-        )
-        top3.metric(
-            "Total Word Errors",
-            f"{cmp['clean_errors']} vs {cmp['noisy_errors']}",
-            delta=f"{cmp['delta_errors']:+d}",
-            delta_color="inverse"
-        )
-        top4.metric(
-            "Critical Entity Accuracy",
-            f"{cmp['clean_crit']['accuracy']:.1f}% vs {cmp['noisy_crit']['accuracy']:.1f}%",
-            delta=f"{cmp['noisy_crit']['accuracy'] - cmp['clean_crit']['accuracy']:+.1f}%",
-            delta_color="normal"
-        )
+        # Acoustic Quality Comparison Table
+        cq = comp.get("clean_quality", {})
+        nq = comp.get("noisy_quality", {})
+        if cq.get("supported") and nq.get("supported"):
+            st.markdown("#### 🎧 Acoustic Signal Comparison")
+            aq_table = pd.DataFrame([
+                {"Metric": "Duration", "Clean Audio": f"{cq['duration_s']:.2f}s", "Noisy Audio": f"{nq['duration_s']:.2f}s"},
+                {"Metric": "Peak Amplitude", "Clean Audio": f"{cq['peak_dbfs']:.1f} dBFS", "Noisy Audio": f"{nq['peak_dbfs']:.1f} dBFS"},
+                {"Metric": "RMS Level", "Clean Audio": f"{cq['rms_dbfs']:.1f} dBFS", "Noisy Audio": f"{nq['rms_dbfs']:.1f} dBFS"},
+                {"Metric": "Clipping %", "Clean Audio": f"{cq['clipping_pct']:.1f}%", "Noisy Audio": f"{nq['clipping_pct']:.1f}%"},
+                {"Metric": "Silence %", "Clean Audio": f"{cq['silence_pct']:.1f}%", "Noisy Audio": f"{nq['silence_pct']:.1f}%"}
+            ])
+            st.dataframe(aq_table, use_container_width=True)
 
-        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        # Side-by-side transcripts
-        t_col1, t_col2 = st.columns(2)
-        with t_col1:
-            st.markdown(f"**Clean Recording Transcript** (`{comp_state['clean_audio_name']}`)")
-            st.success(comp_state["clean_transcript"] or "(Empty transcript returned)")
-            st.caption(f"Request ID: `{comp_state['clean_request_id']}`")
-        with t_col2:
-            st.markdown(f"**Noisy Recording Transcript** (`{comp_state['noisy_audio_name']}`)")
-            st.info(comp_state["noisy_transcript"] or "(Empty transcript returned)")
-            st.caption(f"Request ID: `{comp_state['noisy_request_id']}`")
+        # Transcripts Display
+        st.markdown("#### 📝 Recognized Transcripts")
+        tc1, tc2 = st.columns(2)
+        with tc1:
+            st.markdown(f"""
+            <div class="dashboard-card">
+                <span style="color: #28D98A; font-size: 11px; font-weight: 700; text-transform: uppercase;">Clean Recognized</span>
+                <p style="color: #FFFFFF; font-size: 15px; margin-top: 8px; line-height: 1.8;">{comp['clean']['transcript']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        with tc2:
+            st.markdown(f"""
+            <div class="dashboard-card">
+                <span style="color: #EF4444; font-size: 11px; font-weight: 700; text-transform: uppercase;">Noisy Recognized</span>
+                <p style="color: #FFFFFF; font-size: 15px; margin-top: 8px; line-height: 1.8;">{comp['noisy']['transcript']}</p>
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        st.markdown("#### 📋 Detailed Comparison Table")
-        st.dataframe(cmp["table_rows"], use_container_width=True)
-
-        # Downloads
-        comp_txt_report = generate_comparison_txt_report(
-            cmp,
-            comp_state["reference"],
-            comp_state["clean_audio_name"],
-            comp_state["noisy_audio_name"],
-            comp_state["language"],
-            comp_state["clean_request_id"],
-            comp_state["noisy_request_id"]
-        )
-        comp_csv_data = generate_comparison_csv(cmp)
-
-        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        st.markdown("#### 📥 Download Comparison Reports")
-        dc1, dc2 = st.columns(2)
-        with dc1:
-            st.download_button(
-                "📥 Download Comparison Report (.txt)",
-                comp_txt_report,
-                file_name=f"NADHAM_QA_Comparison_{comp_state['clean_audio_name']}_vs_{comp_state['noisy_audio_name']}.txt",
-                mime="text/plain",
-                use_container_width=True
-            )
-        with dc2:
-            st.download_button(
-                "📊 Download Comparison Metrics (.csv)",
-                comp_csv_data,
-                file_name=f"NADHAM_QA_Comparison_{comp_state['clean_audio_name']}_vs_{comp_state['noisy_audio_name']}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
+        # Export Buttons
+        dl_c1, dl_c2 = st.columns(2)
+        with dl_c1:
+            txt_rep = generate_comparison_txt_report(comp)
+            st.download_button("📥 Download Comparison Report (.txt)", txt_rep, file_name="NADHAM_QA_Comparison_Report.txt", mime="text/plain", use_container_width=True)
+        with dl_c2:
+            csv_rep = generate_comparison_csv(comp)
+            st.download_button("📊 Download Comparison CSV (.csv)", csv_rep.encode("utf-8"), file_name="NADHAM_QA_Comparison.csv", mime="text/csv", use_container_width=True)
 
 
-with tab_benchmark:
-    st.markdown("### 📊 Malayalam Speech Recognition Benchmark & Reliability Evidence")
-    st.caption(
-        "Standardized batch evaluation across genuine Malayalam speech recordings using Gnani Prisma STT."
-    )
+# -----------------------------------------------------------------------------
+# VIEW 4: 🧪 BENCHMARK LAB
+# -----------------------------------------------------------------------------
+elif st.session_state["nav_selection"] == "🧪 Benchmark Lab":
+    st.markdown("### 🧪 Malayalam Benchmark Lab & Reliability Evidence")
+    st.caption("Systematic batch evaluation across standardized Malayalam speech recordings with exact aggregate error quotients.")
 
     dataset_info = discover_benchmark_dataset()
 
-    # Section A: Dataset Inventory Cards
     b_col1, b_col2, b_col3, b_col4 = st.columns(4)
     with b_col1:
-        st.metric("Discovered Samples", dataset_info["total_discovered"])
+        st.metric("Discovered Samples", f"{dataset_info['total_discovered']}")
     with b_col2:
-        st.metric("Verified Valid", dataset_info["valid_count"])
+        st.metric("Verified Valid", f"{dataset_info['valid_count']}")
     with b_col3:
-        st.metric("Acoustic Condition", f"Normal / Clean ({dataset_info['normal_condition_count']})")
+        st.metric("Acoustic Condition", "Pure Normal Speech")
     with b_col4:
-        st.metric("Paired Noise Status", "Unavailable (0 pairs)")
+        st.metric("Paired Noise Status", "No Paired Noisy Samples")
 
-    # Section B: Clean/Noisy Transparency Callout
-    st.info(
-        "ℹ️ **Paired Clean vs. Noisy Benchmark Status:** The current benchmark dataset contains 5 genuine "
-        "Malayalam speech recordings under normal/clean acoustic conditions. Genuine paired clean-versus-noisy "
-        "recordings are not present in this dataset. NADHAM QA rigorously evaluates all available samples "
-        "without fabricating synthetic noise or simulating unrecorded conditions."
-    )
+    # Transparency Notice (Required)
+    st.info("📢 **Paired Clean vs. Noisy Benchmark Status:** The benchmark dataset currently contains five normal Malayalam speech recordings (`dataset/normal/`) and does not contain paired noisy recordings. In the spirit of honest evaluation, NADHAM QA transparently reports this rather than fabricating synthetic noise.")
 
-    # Section C: Benchmark Controls
-    st.markdown("#### ⚙️ Benchmark Execution Controls")
-    valid_sample_ids = [s["sample_id"] for s in dataset_info["samples"] if s["status"] == "valid"]
-    selected_sample_ids = st.multiselect(
+    sample_options = [s["sample_id"] for s in dataset_info["samples"] if s.get("valid_pair")]
+    selected_samples = st.multiselect(
         "Select Benchmark Samples to Evaluate",
-        options=valid_sample_ids,
-        default=valid_sample_ids,
-        help="Select which Malayalam audio samples to include in the benchmark batch evaluation run."
-    )
-    num_selected = len(selected_sample_ids)
-
-    st.warning(
-        f"⚠️ **Credit & API Notice:** Executing this benchmark will initiate **{num_selected}** live API request(s) "
-        f"to Gnani Prisma STT and consume **{num_selected}** API transactions. Analysis begins strictly when you click the button below."
+        sample_options,
+        default=sample_options
     )
 
-    run_benchmark_btn = st.button(
-        "🚀 Execute Malayalam Benchmark",
-        type="primary",
-        use_container_width=True,
-        disabled=(num_selected == 0)
-    )
+    st.warning("⚠️ **API Consumption Warning:** Batch evaluation sends one live request to Gnani Prisma STT per selected sample. Run only when necessary.")
 
-    # Section D: Execution Logic
-    if run_benchmark_btn:
-        st.session_state["benchmark_results"] = None
-        samples_to_run = [s for s in dataset_info["samples"] if s["sample_id"] in selected_sample_ids]
+    run_bench_clicked = st.button("🚀 Execute Malayalam Benchmark", type="primary", use_container_width=True)
 
-        progress_bar = st.progress(0.0)
-        status_text = st.empty()
+    if run_bench_clicked:
+        if not selected_samples:
+            st.error("Please select at least one benchmark sample to evaluate.")
+        else:
+            prog_bar = st.progress(0.0)
+            status_txt = st.empty()
 
-        def batch_progress(current, total, sid):
-            frac = current / total if total > 0 else 1.0
-            progress_bar.progress(frac)
-            if current < total:
-                status_text.markdown(f"**Evaluating sample {current + 1} of {total}:** `{sid}`...")
-            else:
-                status_text.markdown("**Batch evaluation completed!** Processing aggregate metrics...")
+            def progress_cb(current, total, sample_id):
+                prog_bar.progress(current / total)
+                status_txt.text(f"Evaluating {sample_id} ({current}/{total})...")
 
-        try:
-            with st.spinner("Executing Malayalam benchmark evaluation across selected samples..."):
-                batch_res = evaluate_benchmark_batch(
-                    samples_to_run,
-                    progress_callback=batch_progress,
-                    api_caller=call_gnani,
-                    language="Malayalam"
-                )
-                st.session_state["benchmark_results"] = batch_res
-                status_text.empty()
-                progress_bar.empty()
-                st.success(
-                    f"✅ Benchmark run completed: {batch_res['summary']['successful_samples']}/{batch_res['summary']['total_samples']} "
-                    f"samples evaluated successfully."
-                )
-        except Exception as e:
-            st.error(f"Benchmark batch evaluation encountered an unexpected error: {e}")
+            batch_results = evaluate_benchmark_batch(
+                dataset_info,
+                selected_sample_ids=selected_samples,
+                language_code="ml-IN",
+                progress_callback=progress_cb
+            )
 
-    # Section E: Results Dashboard
-    if st.session_state.get("benchmark_results"):
-        bench = st.session_state["benchmark_results"]
+            prog_bar.progress(1.0)
+            status_txt.text("Benchmark batch evaluation complete!")
+            st.session_state["benchmark_results"] = batch_results
+
+    bench = st.session_state.get("benchmark_results")
+    if bench:
         agg = bench.get("aggregate", {})
-        summ = bench.get("summary", {})
-        s_results = bench.get("sample_results", [])
+        summary = bench.get("summary", {})
 
-        st.markdown("### 📈 Aggregate Benchmark Metrics")
+        st.markdown("---")
+        st.markdown("### 📊 Benchmark Aggregate Results")
 
-        agg_col1, agg_col2, agg_col3, agg_col4 = st.columns(4)
-        with agg_col1:
-            wer_display = f"{agg.get('aggregate_wer')}%" if agg.get('aggregate_wer') is not None else "N/A"
-            st.metric("Aggregate WER", wer_display, help="Total word errors divided by total reference words across successful samples")
-        with agg_col2:
-            cer_display = f"{agg.get('aggregate_cer')}%" if agg.get('aggregate_cer') is not None else "N/A"
-            st.metric("Aggregate CER", cer_display, help="Total character errors divided by total reference graphemes across successful samples")
-        with agg_col3:
-            st.metric("Benchmark Success Rate", f"{summ.get('benchmark_success_rate', 0.0)}%", help="Percentage of samples transcribed successfully")
-        with agg_col4:
-            crit_disp = f"{agg.get('aggregate_critical_match_rate')}%" if agg.get('aggregate_critical_match_rate') is not None else "N/A"
-            st.metric("Critical Entity Match", crit_disp, help="Overall critical entity retention rate across successful samples")
+        res_c1, res_c2, res_c3, res_c4 = st.columns(4)
+        with res_c1:
+            st.metric("Aggregate WER", f"{agg.get('aggregate_wer', 0.0):.2f}%" if agg.get("aggregate_wer") is not None else "N/A")
+        with res_c2:
+            st.metric("Aggregate CER", f"{agg.get('aggregate_cer', 0.0):.2f}%" if agg.get("aggregate_cer") is not None else "N/A")
+        with res_c3:
+            st.metric("Benchmark Success Rate", f"{summary.get('benchmark_success_rate', 0.0):.1f}%")
+        with res_c4:
+            st.metric("Critical Entity Match", f"{agg.get('aggregate_critical_match_rate', 0.0):.1f}%" if agg.get("aggregate_critical_match_rate") is not None else "N/A")
 
-        st.markdown("#### 🔬 Aggregate Error Breakdown")
-        err_col1, err_col2 = st.columns(2)
-        with err_col1:
-            st.markdown(
-                f"""
-                <div style="background-color: var(--card-bg, #ffffff); padding: 16px; border-radius: 8px; border: 1px solid #e0e0e0;">
-                    <div style="font-weight: 600; margin-bottom: 8px;">Word-Level Statistics</div>
-                    <div>Reference Words: <b>{agg.get('total_ref_words', 0)}</b></div>
-                    <div>Hypothesis Words: <b>{agg.get('total_hyp_words', 0)}</b></div>
-                    <div>Total Word Errors: <b>{agg.get('total_word_errors', 0)}</b></div>
-                    <div style="margin-top: 4px; font-size: 0.9em; color: #555;">
-                        Substitutions: {agg.get('substitutions', 0)} | Deletions: {agg.get('deletions', 0)} | Insertions: {agg.get('insertions', 0)}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        with err_col2:
-            st.markdown(
-                f"""
-                <div style="background-color: var(--card-bg, #ffffff); padding: 16px; border-radius: 8px; border: 1px solid #e0e0e0;">
-                    <div style="font-weight: 600; margin-bottom: 8px;">Character-Level Statistics (Grapheme Clusters)</div>
-                    <div>Reference Graphemes: <b>{agg.get('total_ref_graphemes', 0)}</b></div>
-                    <div>Hypothesis Graphemes: <b>{agg.get('total_hyp_graphemes', 0)}</b></div>
-                    <div>Total Character Errors: <b>{agg.get('total_char_errors', 0)}</b></div>
-                    <div style="margin-top: 4px; font-size: 0.9em; color: #555;">
-                        Substitutions: {agg.get('char_substitutions', 0)} | Deletions: {agg.get('char_deletions', 0)} | Insertions: {agg.get('char_insertions', 0)}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-        st.markdown("### 📋 Sample-Level Evaluation Table")
-
-        df_rows = []
-        for s in s_results:
-            df_rows.append({
-                "Sample ID": s.get("sample_id"),
-                "Status": s.get("status"),
-                "WER (%)": f"{s.get('wer')}%" if s.get('wer') is not None else "N/A",
-                "CER (%)": f"{s.get('cer')}%" if s.get('cer') is not None else "N/A",
-                "Crit Match (%)": f"{s.get('critical_match_rate')}%" if s.get('critical_match_rate') is not None else "N/A",
-                "Ref Words": s.get("ref_words"),
-                "Word Errors": s.get("word_errors"),
-                "Ref Chars": s.get("ref_graphemes"),
-                "Char Errors": s.get("char_errors"),
+        # Sample-Level Results Table
+        st.markdown("#### 📋 Sample-Level Breakdown")
+        table_rows = []
+        for s in bench.get("sample_results", []):
+            table_rows.append({
+                "Sample ID": s["sample_id"],
+                "Audio File": s["audio_filename"],
+                "Ref Words": s["ref_words"],
+                "Hyp Words": s["hyp_words"],
+                "WER (%)": f"{s['wer']:.2f}%" if s.get("wer") is not None else "N/A",
+                "CER (%)": f"{s['cer']:.2f}%" if s.get("cer") is not None else "N/A",
+                "Critical Match": f"{s['critical_match_rate']:.1f}%" if s.get("critical_match_rate") is not None else "N/A",
                 "Latency (s)": f"{s.get('latency_sec', 0.0):.2f}",
-                "Audio File": s.get("audio_filename")
+                "Status": s.get("status", "SUCCESS")
             })
-        if df_rows:
-            st.dataframe(pd.DataFrame(df_rows), use_container_width=True)
+        st.dataframe(pd.DataFrame(table_rows), use_container_width=True)
 
-        with st.expander("🔍 Inspect Individual Sample Details & Transcripts", expanded=False):
-            for s in s_results:
-                st.markdown(f"#### Sample `{s.get('sample_id')}` ({s.get('audio_filename')})")
-                st.markdown(f"**Status:** {s.get('status')} | **Request ID:** `{s.get('request_id', 'N/A')}` | **Latency:** {s.get('latency_sec', 0.0):.2f}s")
-                st.markdown("**Reference Transcript:**")
-                st.info(s.get("reference", "—"))
-                st.markdown("**Gnani Hypothesis Transcript:**")
-                if s.get("status") == "Success":
-                    st.success(s.get("hypothesis", "—"))
-                else:
-                    st.error(f"Evaluation Failed: {s.get('error_message')}")
-                st.markdown(
-                    f"WER: **{s.get('wer') if s.get('wer') is not None else 'N/A'}%** (S:{s.get('substitutions')}, D:{s.get('deletions')}, I:{s.get('insertions')}) | "
-                    f"CER: **{s.get('cer') if s.get('cer') is not None else 'N/A'}%** (S:{s.get('char_substitutions')}, D:{s.get('char_deletions')}, I:{s.get('char_insertions')}) | "
-                    f"Critical Match: **{s.get('critical_match_rate') if s.get('critical_match_rate') is not None else 'N/A'}%**"
-                )
-                st.divider()
-
-        st.markdown("### 📥 Export Benchmark Evidence Reports")
-        dl_col1, dl_col2, dl_col3 = st.columns(3)
-        with dl_col1:
-            txt_report_data = generate_benchmark_summary_txt(bench, dataset_info)
-            st.download_button(
-                "📥 Benchmark Summary (TXT)",
-                txt_report_data.encode("utf-8"),
-                file_name=f"NADHAM_QA_Benchmark_Summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                mime="text/plain",
-                use_container_width=True
-            )
-        with dl_col2:
-            sample_csv_data = generate_benchmark_sample_csv(bench)
-            st.download_button(
-                "📊 Sample-Level CSV",
-                sample_csv_data.encode("utf-8"),
-                file_name=f"NADHAM_QA_Benchmark_Samples_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        with dl_col3:
-            agg_csv_data = generate_benchmark_aggregate_csv(bench)
-            st.download_button(
-                "📈 Aggregate Metrics CSV",
-                agg_csv_data.encode("utf-8"),
-                file_name=f"NADHAM_QA_Benchmark_Aggregate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
+        # Export Evidence
+        st.markdown("#### 📥 Export Benchmark Evidence Reports")
+        dl_c1, dl_c2, dl_c3 = st.columns(3)
+        with dl_c1:
+            txt_rep = generate_benchmark_summary_txt(bench, dataset_info)
+            st.download_button("📥 Benchmark Summary (TXT)", txt_rep.encode("utf-8"), file_name=f"NADHAM_QA_Benchmark_Summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt", mime="text/plain", use_container_width=True)
+        with dl_c2:
+            sample_csv = generate_benchmark_sample_csv(bench)
+            st.download_button("📊 Sample-Level CSV", sample_csv.encode("utf-8"), file_name=f"NADHAM_QA_Benchmark_Samples_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", mime="text/csv", use_container_width=True)
+        with dl_c3:
+            agg_csv = generate_benchmark_aggregate_csv(bench)
+            st.download_button("📈 Aggregate Metrics CSV", agg_csv.encode("utf-8"), file_name=f"NADHAM_QA_Benchmark_Aggregate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", mime="text/csv", use_container_width=True)
 
 
-with st.expander("ℹ️ About NADHAM QA — Kerala-First Speech Intelligence", expanded=False):
+# -----------------------------------------------------------------------------
+# VIEW 5: 📜 EVALUATION HISTORY & AUDIT
+# -----------------------------------------------------------------------------
+elif st.session_state["nav_selection"] == "📜 Evaluation History":
+    st.markdown("### 📜 Evaluation History & Audit Trail")
+    st.caption("Complete chronological record of all single and benchmark evaluation sessions executed.")
+
+    if st.session_state["eval_history"]:
+        h_col1, h_col2, h_col3 = st.columns(3)
+        with h_col1:
+            st.metric("Total Executions", len(st.session_state["eval_history"]))
+        with h_col2:
+            wers = [h["wer"] for h in st.session_state["eval_history"] if h.get("wer") is not None]
+            st.metric("Session Average WER", f"{sum(wers)/len(wers):.2f}%" if wers else "N/A")
+        with h_col3:
+            cers = [h["cer"] for h in st.session_state["eval_history"] if h.get("cer") is not None]
+            st.metric("Session Average CER", f"{sum(cers)/len(cers):.2f}%" if cers else "N/A")
+
+        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+
+        history_data = []
+        for h in reversed(st.session_state["eval_history"]):
+            ts = h.get("timestamp", datetime.now())
+            ts_str = ts.strftime("%Y-%m-%d %H:%M:%S") if isinstance(ts, datetime) else str(ts)
+            history_data.append({
+                "Timestamp": ts_str,
+                "Module": h.get("module", "Single Evaluation"),
+                "Language": h.get("language", "Malayalam"),
+                "Ref Words": h.get("ref_words", "N/A"),
+                "WER (%)": f"{h.get('wer', 0.0):.2f}%",
+                "CER (%)": f"{h.get('cer', 0.0):.2f}%" if h.get("cer") is not None else "—",
+                "Status": "COMPLETED"
+            })
+        st.dataframe(pd.DataFrame(history_data), use_container_width=True)
+
+        if st.button("🗑️ Clear Session History", key="btn_clear_history"):
+            st.session_state["eval_history"] = []
+            st.rerun()
+    else:
+        st.markdown("""
+        <div class="dashboard-card" style="text-align: center; padding: 48px 20px;">
+            <div style="font-size: 40px; margin-bottom: 12px;">📜</div>
+            <div style="font-size: 18px; font-weight: 700; color: #FFFFFF; margin-bottom: 6px;">No Evaluation History Recorded Yet</div>
+            <p style="color: #94A3B8; font-size: 14px; max-width: 500px; margin: 0 auto;">
+                Perform an evaluation in Single Evaluation, Clean vs Noisy, or Benchmark Lab to generate audit logs.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+# -----------------------------------------------------------------------------
+# VIEW 6: 📑 REPORTS & EXPORT CENTER
+# -----------------------------------------------------------------------------
+elif st.session_state["nav_selection"] == "📑 Reports & Export":
+    st.markdown("### 📑 Reports & Diagnostic Export Center")
+    st.caption("Centralized repository of generated audit reports, alignment spreadsheets, and benchmark summaries.")
+
+    rep_col1, rep_col2, rep_col3 = st.columns(3)
+
+    with rep_col1:
+        st.markdown("""
+        <div class="module-card">
+            <div class="module-num" style="color: #7545FF;">REPORTS 01</div>
+            <div class="module-title">🎙️ Single Test Report</div>
+            <div class="module-desc">
+                Download structured TXT diagnostic summaries and word-level Levenshtein alignment CSV tables.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.session_state.get("transcript"):
+            st.success("Latest single evaluation report available!")
+        else:
+            st.caption("No single evaluation executed in this session.")
+
+    with rep_col2:
+        st.markdown("""
+        <div class="module-card">
+            <div class="module-num" style="color: #21B8FF;">REPORTS 02</div>
+            <div class="module-title">🔬 Comparison Report</div>
+            <div class="module-desc">
+                Download clean vs. noisy degradation comparisons, delta metrics, and acoustic signal tables.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.session_state.get("compare_results"):
+            st.success("Comparison report available!")
+        else:
+            st.caption("No clean vs. noisy comparison executed yet.")
+
+    with rep_col3:
+        st.markdown("""
+        <div class="module-card">
+            <div class="module-num" style="color: #28D98A;">REPORTS 03</div>
+            <div class="module-title">🧪 Benchmark Bundle</div>
+            <div class="module-desc">
+                Download complete benchmark evidence bundles, sample-level matrices, and aggregate CSVs.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.session_state.get("benchmark_results"):
+            st.success("Benchmark evidence available!")
+        else:
+            st.caption("No benchmark run executed yet.")
+
+
+# -----------------------------------------------------------------------------
+# VIEW 7: ℹ️ ABOUT NADHAM QA
+# -----------------------------------------------------------------------------
+elif st.session_state["nav_selection"] == "ℹ️ About":
+    st.markdown("### ℹ️ About NADHAM QA — Speech Intelligence Platform")
     st.markdown("""
-    ### 🎙️ The Kerala-First Speech Intelligence Mission
-    **NADHAM QA** is an enterprise evaluation platform designed to benchmark Indic speech recognition models with true linguistic precision, specifically tailored for **Gnani Prisma STT (v2.5)**.
+    <div class="dashboard-card">
+        <h3 style="color: #FFFFFF; margin-top: 0;">🎙️ The Kerala-First Speech Intelligence Mission</h3>
+        <p style="color: #94A3B8; font-size: 14.5px; line-height: 1.7;">
+            <strong>NADHAM QA</strong> is an enterprise evaluation platform designed to benchmark Indic speech recognition models with true linguistic precision, specifically tailored for <strong>Gnani Prisma STT (v2.5)</strong>.
+        </p>
+        <h4 style="color: #21B8FF; margin-top: 20px;">🌟 Why Malayalam Needs Specialized Evaluation:</h4>
+        <ol style="color: #E2E8F0; font-size: 14px; line-height: 1.8;">
+            <li><strong>Malayalam Chillu Ambiguity:</strong> Modern Unicode represents chillu letters atomically (<code>ൺ</code>, <code>ൻ</code>, <code>ർ</code>, <code>ൽ</code>, <code>ൾ</code>, <code>ൿ</code>), whereas legacy keyboards generate decomposed consonant + virama + Zero-Width Joiner (ZWJ). Standard NFC normalization fails to equate them; NADHAM QA canonicalizes them to prevent artificial error inflation.</li>
+            <li><strong>Zero-Width Formatting Controls:</strong> Zero-Width Spaces (<code>\u200B</code>) and Joiners that glue words together are handled cleanly.</li>
+            <li><strong>Domain-Critical Entities:</strong> Naive punctuation stripping destroys decimals (<code>3.14</code> ➔ <code>314</code>) and dates. NADHAM QA identifies and preserves 7 high-risk critical entity types.</li>
+        </ol>
+        <h4 style="color: #28D98A; margin-top: 20px;">⚙️ Dual-Granularity Evaluation Methodology:</h4>
+        <p style="color: #94A3B8; font-size: 14px; line-height: 1.7;">
+            NADHAM QA implements the exact <strong>Wagner-Fischer Dynamic Programming algorithm</strong> for word-level Word Error Rate (WER) alongside Character Error Rate (CER) evaluated over <strong>Unicode UAX #29 extended grapheme clusters</strong> (whitespace excluded).
+        </p>
+        <h4 style="color: #C084FC; margin-top: 20px;">🛡️ Enterprise Safety Guardrails:</h4>
+        <ul style="color: #E2E8F0; font-size: 14px; line-height: 1.8;">
+            <li>Client-side rejection of 0-byte (empty) audio files to safeguard API quotas.</li>
+            <li>25 MB upload ceiling to mitigate memory exhaustion.</li>
+            <li>Sanitization of upstream HTML errors (e.g. Cloudflare 504 Gateway Timeouts).</li>
+            <li>Session state invalidation on each new test to eliminate stale UI metrics.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
-    #### 🌟 Why Malayalam Needs Specialized Evaluation:
-    1. **Malayalam Chillu Ambiguity:** Modern Unicode represents chillu letters atomically (`ൺ`, `ൻ`, `ർ`, `ൽ`, `ൾ`, `ൿ`), whereas legacy keyboards generate decomposed consonant + virama (`്`) + Zero-Width Joiner (`ZWJ`). Standard NFC normalization fails to equate them; NADHAM QA canonicalizes them to prevent artificial error inflation.
-    2. **Zero-Width Controls:** Zero-Width Spaces (`\\u200B`) and Joiners (`\\u200D`/`\\u200C`) that glue words together are handled cleanly.
-    3. **Entity Preservation:** Standard punctuation filters destroy decimals (`3.14` → `314`) and dates (`15/08/1947` → `15081947`). NADHAM QA preserves numeric entities and normalizes currency symbols (`₹`, `$`).
 
-    #### ⚙️ Evaluation Methodology:
-    NADHAM QA implements the exact **Wagner-Fischer Dynamic Programming algorithm** to compute word-level and character-level edit distance:
-    $$\\text{WER} = \\frac{\\text{Substitutions} + \\text{Deletions} + \\text{Insertions}}{\\text{Reference Word Count}} \\times 100\\%$$
-    $$\\text{CER} = \\frac{\\text{Char Substitutions} + \\text{Char Deletions} + \\text{Char Insertions}}{\\text{Reference Grapheme Count}} \\times 100\\%$$
-
-    *Note on CER Policy:* Character Error Rate is evaluated over Unicode UAX #29 extended grapheme clusters (base characters with attached matras, viramas, and chillus; whitespace excluded) strictly against the supplied reference transcript.
-
-    #### 🛡️ Enterprise Safety Guardrails:
-    - Client-side rejection of 0-byte (empty) audio files to safeguard API quotas.
-    - 25 MB file size limit to prevent memory exhaustion (DoS).
-    - Upstream HTML error sanitization (detecting Cloudflare 502/504 gateway timeouts without dumping raw markup).
-    - Session state invalidation on each new test to eliminate stale UI metrics.
-    """)
-
-st.divider()
-
-st.caption(
-    "NADHAM QA | Powered by Gnani Prisma"
-)
+# -----------------------------------------------------------------------------
+# Global App Footer & Branding
+# -----------------------------------------------------------------------------
+st.markdown("""
+<div class="app-footer">
+    <div class="footer-copy">
+        Built with ❤️ for Malayalam AI Innovation · Powered by <a href="https://gnani.ai" target="_blank" style="color: #21B8FF; text-decoration: none; font-weight: 600;">Gnani Prisma v2.5</a>
+    </div>
+    <div class="footer-links">
+        <a href="https://github.com/saviosinto123/NADHAM-QA" target="_blank" class="footer-link">GitHub Repository</a>
+        <span class="footer-sep">·</span>
+        <a href="https://github.com/saviosinto123/NADHAM-QA/blob/main/README.md" target="_blank" class="footer-link">Documentation</a>
+        <span class="footer-sep">·</span>
+        <a href="https://gnani.ai" target="_blank" class="footer-link">Gnani AI</a>
+    </div>
+</div>
+""", unsafe_allow_html=True)

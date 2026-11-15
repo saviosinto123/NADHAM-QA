@@ -647,6 +647,56 @@ class TestCriticalInfoKeyRegression:
 
 
 # =====================================================================
+# 3c. Sidebar Navigation & Route Verification Tests
+# =====================================================================
+
+class TestNavigationAndRouting:
+    """Verifies that sidebar navigation options and remaining pages function cleanly after removing History and Reports."""
+
+    def test_navigation_options_are_exactly_five(self):
+        """Navigation options contain exactly 5 core sections with History and Reports completely removed."""
+        app_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "app.py"))
+        at = AppTest.from_file(app_file, default_timeout=30)
+        at.run()
+        assert not at.exception, f"AppTest load error: {at.exception}"
+
+        options = at.radio[0].options
+        expected = [
+            "📊 Dashboard",
+            "🎙️ Single Evaluation",
+            "🔬 Clean vs Noisy",
+            "🧪 Benchmark Lab",
+            "ℹ️ About"
+        ]
+        assert options == expected
+        assert "📜 Evaluation History" not in options
+        assert "📑 Reports & Export" not in options
+
+    def test_dashboard_module_buttons_updated(self):
+        """Dashboard quick access offers exactly 3 core modules; History button removed."""
+        app_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "app.py"))
+        at = AppTest.from_file(app_file, default_timeout=30)
+        at.run()
+
+        button_labels = [b.label for b in at.button]
+        assert "Launch Single Evaluation →" in button_labels
+        assert "Launch Clean vs Noisy →" in button_labels
+        assert "Open Benchmark Lab →" in button_labels
+        assert "View Evaluation History →" not in button_labels
+        assert len(button_labels) == 3
+
+    def test_all_remaining_pages_navigate_without_exception(self):
+        """All 5 remaining navigation views render cleanly with zero unhandled exceptions."""
+        app_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "app.py"))
+        at = AppTest.from_file(app_file, default_timeout=30)
+        at.run()
+
+        for opt in at.radio[0].options:
+            at.radio[0].set_value(opt).run()
+            assert not at.exception, f"Navigation to {opt} caused an exception: {at.exception}"
+
+
+# =====================================================================
 # 4. Gnani API & Error Handling Tests
 # =====================================================================
 

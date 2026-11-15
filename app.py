@@ -3,6 +3,7 @@ import os
 import re
 import csv
 import time
+import logging
 import regex
 import requests
 import wave
@@ -14,6 +15,7 @@ from dotenv import load_dotenv
 import unicodedata
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 API_URL = "https://api.vachana.ai/stt/v3"
 MAX_AUDIO_BYTES = 25 * 1024 * 1024  # 25 MB upload limit
@@ -2265,8 +2267,6 @@ with st.sidebar:
         "🎙️ Single Evaluation",
         "🔬 Clean vs Noisy",
         "🧪 Benchmark Lab",
-        "📜 Evaluation History",
-        "📑 Reports & Export",
         "ℹ️ About"
     ]
 
@@ -2549,7 +2549,7 @@ if st.session_state["nav_selection"] == "📊 Dashboard":
     # -------------------------------------------------------------------------
     st.markdown("#### ⚡ Evaluation Modules")
 
-    col_m1, col_m2 = st.columns(2)
+    col_m1, col_m2, col_m3 = st.columns(3)
     with col_m1:
         st.markdown("""
         <div class="module-card">
@@ -2578,7 +2578,6 @@ if st.session_state["nav_selection"] == "📊 Dashboard":
             st.session_state["nav_selection"] = "🔬 Clean vs Noisy"
             st.rerun()
 
-    col_m3, col_m4 = st.columns(2)
     with col_m3:
         st.markdown("""
         <div class="module-card">
@@ -2592,53 +2591,6 @@ if st.session_state["nav_selection"] == "📊 Dashboard":
         if st.button("Open Benchmark Lab →", key="btn_dash_bench", use_container_width=True):
             st.session_state["nav_selection"] = "🧪 Benchmark Lab"
             st.rerun()
-
-    with col_m4:
-        st.markdown("""
-        <div class="module-card">
-            <div class="module-num" style="color: #A855F7;">MODULE 04</div>
-            <div class="module-title">📜 Evaluation History</div>
-            <div class="module-desc">
-                Review historical evaluation logs, examine past transcript alignments, and export structured CSV/TXT verification evidence for auditing.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("View Evaluation History →", key="btn_dash_hist", use_container_width=True):
-            st.session_state["nav_selection"] = "📜 Evaluation History"
-            st.rerun()
-
-    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-
-    # -------------------------------------------------------------------------
-    # Recent Evaluation Results Table
-    # -------------------------------------------------------------------------
-    st.markdown("#### 📋 Recent Evaluation Results")
-
-    if st.session_state["eval_history"]:
-        hist_rows = []
-        for i, h in enumerate(reversed(st.session_state["eval_history"])):
-            ts = h.get("timestamp", datetime.now())
-            ts_str = ts.strftime("%Y-%m-%d %H:%M:%S") if isinstance(ts, datetime) else str(ts)
-            hist_rows.append({
-                "Date & Time": ts_str,
-                "Module": h.get("module", "Single Evaluation"),
-                "Language": h.get("language", "Malayalam"),
-                "Ref Words": h.get("ref_words", 0),
-                "WER (%)": f"{h.get('wer', 0.0):.2f}%",
-                "CER (%)": f"{h.get('cer', 0.0):.2f}%" if h.get("cer") is not None else "—",
-                "Status": "COMPLETED"
-            })
-        st.dataframe(pd.DataFrame(hist_rows), use_container_width=True)
-    else:
-        st.markdown("""
-        <div class="dashboard-card" style="text-align: center; padding: 32px 20px;">
-            <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
-            <div style="font-size: 16px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px;">No Evaluation History in Current Session</div>
-            <p style="color: #94A3B8; font-size: 13px; margin: 0 auto; max-width: 480px;">
-                Completed single evaluations and benchmark runs will automatically appear here with full diagnostic metrics.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
 
 
 # -----------------------------------------------------------------------------
@@ -3208,112 +3160,7 @@ elif st.session_state["nav_selection"] == "🧪 Benchmark Lab":
 
 
 # -----------------------------------------------------------------------------
-# VIEW 5: 📜 EVALUATION HISTORY & AUDIT
-# -----------------------------------------------------------------------------
-elif st.session_state["nav_selection"] == "📜 Evaluation History":
-    st.markdown("### 📜 Evaluation History & Audit Trail")
-    st.caption("Complete chronological record of all single and benchmark evaluation sessions executed.")
-
-    if st.session_state["eval_history"]:
-        h_col1, h_col2, h_col3 = st.columns(3)
-        with h_col1:
-            st.metric("Total Executions", len(st.session_state["eval_history"]))
-        with h_col2:
-            wers = [h["wer"] for h in st.session_state["eval_history"] if h.get("wer") is not None]
-            st.metric("Session Average WER", f"{sum(wers)/len(wers):.2f}%" if wers else "N/A")
-        with h_col3:
-            cers = [h["cer"] for h in st.session_state["eval_history"] if h.get("cer") is not None]
-            st.metric("Session Average CER", f"{sum(cers)/len(cers):.2f}%" if cers else "N/A")
-
-        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-
-        history_data = []
-        for h in reversed(st.session_state["eval_history"]):
-            ts = h.get("timestamp", datetime.now())
-            ts_str = ts.strftime("%Y-%m-%d %H:%M:%S") if isinstance(ts, datetime) else str(ts)
-            history_data.append({
-                "Timestamp": ts_str,
-                "Module": h.get("module", "Single Evaluation"),
-                "Language": h.get("language", "Malayalam"),
-                "Ref Words": h.get("ref_words", "N/A"),
-                "WER (%)": f"{h.get('wer', 0.0):.2f}%",
-                "CER (%)": f"{h.get('cer', 0.0):.2f}%" if h.get("cer") is not None else "—",
-                "Status": "COMPLETED"
-            })
-        st.dataframe(pd.DataFrame(history_data), use_container_width=True)
-
-        if st.button("🗑️ Clear Session History", key="btn_clear_history"):
-            st.session_state["eval_history"] = []
-            st.rerun()
-    else:
-        st.markdown("""
-        <div class="dashboard-card" style="text-align: center; padding: 48px 20px;">
-            <div style="font-size: 40px; margin-bottom: 12px;">📜</div>
-            <div style="font-size: 18px; font-weight: 700; color: #FFFFFF; margin-bottom: 6px;">No Evaluation History Recorded Yet</div>
-            <p style="color: #94A3B8; font-size: 14px; max-width: 500px; margin: 0 auto;">
-                Perform an evaluation in Single Evaluation, Clean vs Noisy, or Benchmark Lab to generate audit logs.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-
-# -----------------------------------------------------------------------------
-# VIEW 6: 📑 REPORTS & EXPORT CENTER
-# -----------------------------------------------------------------------------
-elif st.session_state["nav_selection"] == "📑 Reports & Export":
-    st.markdown("### 📑 Reports & Diagnostic Export Center")
-    st.caption("Centralized repository of generated audit reports, alignment spreadsheets, and benchmark summaries.")
-
-    rep_col1, rep_col2, rep_col3 = st.columns(3)
-
-    with rep_col1:
-        st.markdown("""
-        <div class="module-card">
-            <div class="module-num" style="color: #7545FF;">REPORTS 01</div>
-            <div class="module-title">🎙️ Single Test Report</div>
-            <div class="module-desc">
-                Download structured TXT diagnostic summaries and word-level Levenshtein alignment CSV tables.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.session_state.get("transcript"):
-            st.success("Latest single evaluation report available!")
-        else:
-            st.caption("No single evaluation executed in this session.")
-
-    with rep_col2:
-        st.markdown("""
-        <div class="module-card">
-            <div class="module-num" style="color: #21B8FF;">REPORTS 02</div>
-            <div class="module-title">🔬 Comparison Report</div>
-            <div class="module-desc">
-                Download clean vs. noisy degradation comparisons, delta metrics, and acoustic signal tables.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.session_state.get("compare_results"):
-            st.success("Comparison report available!")
-        else:
-            st.caption("No clean vs. noisy comparison executed yet.")
-
-    with rep_col3:
-        st.markdown("""
-        <div class="module-card">
-            <div class="module-num" style="color: #28D98A;">REPORTS 03</div>
-            <div class="module-title">🧪 Benchmark Bundle</div>
-            <div class="module-desc">
-                Download complete benchmark evidence bundles, sample-level matrices, and aggregate CSVs.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.session_state.get("benchmark_results"):
-            st.success("Benchmark evidence available!")
-        else:
-            st.caption("No benchmark run executed yet.")
-
-
-# -----------------------------------------------------------------------------
-# VIEW 7: ℹ️ ABOUT NADHAM QA
+# VIEW 5: ℹ️ ABOUT NADHAM QA
 # -----------------------------------------------------------------------------
 elif st.session_state["nav_selection"] == "ℹ️ About":
     st.markdown("### ℹ️ About NADHAM QA — Speech Intelligence Platform")
